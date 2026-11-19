@@ -18,6 +18,7 @@ It's one HTML file with its own CSS and JavaScript. There is no build step and n
 
 - Run into soap to pick it up. Three bars getting away ends the shift.
 - Gold soap is worth 5×, and catch streaks raise the multiplier up to ×5.
+- Green soap switches on a magnet for 7 seconds: any soap that comes near your inmate gets pulled straight to him.
 - Don't step on the roaches. Each one costs a strike.
 - The game speeds up every 5 bars caught.
 

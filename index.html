@@ -37,6 +37,7 @@
   --soap:#f8cfdb; --soap-deep:#e592ae;
   --gold:#f5c542; --gold-deep:#c98a12;
   --stamp:#c42b1f; --strike:#ff5145;
+  --magnet:#3ddc84; --magnet-soap:#8ef0b4; --magnet-deep:#14964f;
   --skin:#e3ad86; --skin-hi:#f4c7a4; --skin-shade:#c48a62; --skin-deep:#a26d4c; --tat:#2e4e6f;
   --font-display:"Black Ops One", Impact, "Arial Black", sans-serif;
   --font-type:"Courier Prime", "Courier New", Courier, monospace;
@@ -196,12 +197,12 @@ button{font:inherit}
 .sprite.boomerang .trail{display:none}
 @keyframes suds{to{opacity:.5; transform:translateY(2px)}}
 
-.soap .body, .gold .body{border-radius:36% / 46%}
+.soap .body, .gold .body, .green .body{border-radius:36% / 46%}
 .soap .body{
   background:radial-gradient(130% 100% at 28% 22%, #fff 0 6%, var(--soap) 36%, var(--soap-deep) 100%);
   box-shadow:inset -5px -7px 12px rgba(170,60,100,.35), inset 4px 5px 8px rgba(255,255,255,.75), 0 4px 0 rgba(150,55,90,.3);
 }
-.soap .body::before, .gold .body::before{content:""; position:absolute; inset:18% 14%; border-radius:50%; box-shadow:inset 2px 3px 4px rgba(160,55,95,.3), inset -2px -2px 3px rgba(255,255,255,.65)}
+.soap .body::before, .gold .body::before, .green .body::before{content:""; position:absolute; inset:18% 14%; border-radius:50%; box-shadow:inset 2px 3px 4px rgba(160,55,95,.3), inset -2px -2px 3px rgba(255,255,255,.65)}
 .soap .body::after{
   content:""; position:absolute; inset:-14% -10%;
   background:
@@ -210,7 +211,7 @@ button{font:inherit}
     radial-gradient(circle at 91% 16%, rgba(255,255,255,.9) 0 4.5%, rgba(255,255,255,0) 5.5%),
     radial-gradient(circle at 83% 5%, rgba(255,255,255,.85) 0 2.5%, rgba(255,255,255,0) 3.5%);
 }
-.soap .body span, .gold .body span{position:relative; font:calc(var(--sw) * .19)/1 var(--font-display); letter-spacing:.06em; color:rgba(176,70,108,.55); text-shadow:1px 1px 0 rgba(255,255,255,.7), -1px -1px 0 rgba(140,40,80,.25)}
+.soap .body span, .gold .body span, .green .body span{position:relative; font:calc(var(--sw) * .19)/1 var(--font-display); letter-spacing:.06em; color:rgba(176,70,108,.55); text-shadow:1px 1px 0 rgba(255,255,255,.7), -1px -1px 0 rgba(140,40,80,.25)}
 
 .gold{filter:drop-shadow(0 0 10px rgba(255,205,70,.75))}
 .gold .body{
@@ -219,6 +220,17 @@ button{font:inherit}
 }
 .gold .body::before{box-shadow:inset 2px 3px 4px rgba(140,80,0,.35), inset -2px -2px 3px rgba(255,255,230,.7)}
 .gold .body span{color:rgba(140,85,5,.65); text-shadow:1px 1px 0 rgba(255,250,220,.8)}
+.green{filter:drop-shadow(0 0 9px rgba(61,220,132,.8))}
+.green .body{
+  background:radial-gradient(130% 100% at 28% 22%, #f0fff4 0 6%, var(--magnet-soap) 38%, var(--magnet-deep) 100%);
+  box-shadow:inset -5px -7px 12px rgba(10,110,50,.35), inset 4px 5px 8px rgba(235,255,240,.75), 0 4px 0 rgba(10,100,45,.35);
+}
+.green .body::before{box-shadow:inset 2px 3px 4px rgba(10,110,50,.3), inset -2px -2px 3px rgba(235,255,240,.7)}
+/* horseshoe magnet stamped into the bar, with white tips */
+.green .body span{width:calc(var(--sw) * .27); height:calc(var(--sw) * .23); font-size:0; border:calc(var(--sw) * .065) solid rgba(15,100,50,.7); border-top:0; border-radius:0 0 999px 999px; text-shadow:none}
+.green .body::after{content:""; position:absolute; left:calc(50% - var(--sw) * .135); top:calc(50% - var(--sw) * .115); width:calc(var(--sw) * .27); height:calc(var(--sw) * .055); background:linear-gradient(90deg, #fff 0 24%, transparent 24% 76%, #fff 76%)}
+.sprite.mag{filter:drop-shadow(0 0 7px rgba(61,220,132,.95))}
+.sprite.mag .trail{display:none}
 .gold .body::after{
   content:""; position:absolute; right:-6px; top:-8px; width:18px; height:18px; background:#fff;
   clip-path:polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
@@ -328,6 +340,20 @@ button{font:inherit}
 @keyframes fizz{to{transform:scale(1.05, .97)}}
 .held{left:-6px; bottom:-16px; width:28px; height:17px; border-radius:36% / 46%; opacity:0; background:radial-gradient(130% 100% at 28% 22%, #fff 0 6%, var(--soap) 36%, var(--soap-deep) 100%)}
 .gold-held .held{background:radial-gradient(130% 100% at 28% 22%, #fffbe0 0 6%, var(--gold) 38%, var(--gold-deep) 100%)}
+.green-held .held{background:radial-gradient(130% 100% at 28% 22%, #f0fff4 0 6%, var(--magnet-soap) 38%, var(--magnet-deep) 100%)}
+
+/* magnet field: shown around his feet while green soap is active */
+.hero-aura{
+  position:absolute; z-index:-1; pointer-events:none; opacity:0; transition:opacity .25s;
+  left:calc(var(--aura, 100px) * -1); top:calc(var(--aura, 100px) * -1 - 40px);
+  width:calc(var(--aura, 100px) * 2); height:calc(var(--aura, 100px) * 2);
+  border-radius:50%; border:3px dashed rgba(61,220,132,.75);
+  background:radial-gradient(closest-side, rgba(61,220,132,0) 62%, rgba(61,220,132,.2) 94%, rgba(61,220,132,0));
+}
+.hero.magnet .hero-aura{opacity:1; animation:auraSpin 5s linear infinite}
+.hero.magnet-ending .hero-aura{animation:auraSpin 5s linear infinite, blink .28s steps(2) infinite}
+@keyframes auraSpin{to{rotate:360deg}}
+@keyframes blink{50%{opacity:.25}}
 
 .hero:not(.running) .torso, .figure .torso{animation:breathe 2.6s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.025, 1.015)}}
@@ -397,6 +423,7 @@ button{font:inherit}
 }
 .pop-text.gold{color:var(--gold)}
 .pop-text.bad{color:var(--strike)}
+.pop-text.green{color:var(--magnet)}
 @keyframes rise{0%{transform:translateY(6px) scale(.6); opacity:0} 18%{transform:translateY(0) scale(1.1); opacity:1} 100%{transform:translateY(-54px) scale(1); opacity:0}}
 .bubble{
   position:absolute; width:var(--s); height:var(--s); margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius:50%;
@@ -421,7 +448,7 @@ button{font:inherit}
 .world.shake{animation:shake .32s linear}
 @keyframes shake{0%,100%{transform:translate(0, 0)} 20%{transform:translate(-7px, 3px)} 40%{transform:translate(6px, -3px)} 60%{transform:translate(-4px, 2px)} 80%{transform:translate(3px, -1px)}}
 
-.stage.paused .sprite, .stage.paused .sprite *, .stage.paused .hero *, .stage.paused .fx *{animation-play-state:paused!important}
+.stage.paused .sprite, .stage.paused .sprite *, .stage.paused .hero *, .stage.paused .fx *, .stage.paused .power{animation-play-state:paused!important}
 
 /* ---------- HUD ---------- */
 .hud{
@@ -454,6 +481,15 @@ button{font:inherit}
   border:3px solid var(--ink); border-radius:6px; rotate:-5deg; box-shadow:0 3px 0 var(--ink);
 }
 .combo.bump{animation:bump .3s ease-out}
+.power{
+  position:absolute; left:50%; top:calc(100% - 4px); translate:-50% 0; pointer-events:none;
+  display:grid; gap:5px; padding:6px 12px 7px;
+  color:var(--ink); background:var(--magnet); border:3px solid var(--ink); border-radius:6px; box-shadow:0 3px 0 var(--ink);
+}
+.power-label{font:15px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; text-align:center}
+.power-track{display:block; width:96px; height:6px; overflow:hidden; border-radius:3px; background:rgba(28,33,36,.25)}
+.power-track i{display:block; height:100%; transform-origin:0 50%; background:var(--ink)}
+.power.ending{animation:blink .28s steps(2) infinite}
 .icon-btn{
   width:46px; height:46px; display:grid; place-items:center; cursor:pointer; touch-action:manipulation;
   color:var(--board-text); background:var(--board); border:3px solid var(--board-edge); border-radius:8px;
@@ -562,6 +598,7 @@ button{font:inherit}
   .stream, .splash, .steam i, .puddle, .sprite .trail, .gold .body::after{animation:none}
   .sprite:not(.caught):not(.squished) .body{animation:none}
   .world.shake{animation:none}
+  .hero.magnet .hero-aura, .hero.magnet-ending .hero-aura, .power.ending{animation:none}
   .hero.running .rig, .suds, .hero .torso, .figure .torso, .hero.running .hair-back, .suspect-fig .figure{animation:none!important}
   .card, .overlay{animation:none}
 }
@@ -598,6 +635,7 @@ button{font:inherit}
         <span class="board-num" id="score">0</span>
       </div>
       <div class="combo" id="combo" hidden>×2</div>
+      <div class="power" id="power" hidden><span class="power-label">Magnet</span><span class="power-track"><i id="powerBar"></i></span></div>
     </div>
     <div class="hud-group">
       <div class="board" id="strikesBoard" aria-label="Strikes: 0 of 3">
@@ -636,7 +674,7 @@ button{font:inherit}
           <ol class="rules">
             <li><span>Move the mouse or drag your finger and he runs after it.<span class="kbd-hint"> Arrow keys work too.</span></span></li>
             <li>Run into a bar of soap to pick it up. Let three get away and your shift is over.</li>
-            <li>Gold soap is worth 5×. Catch streaks raise your multiplier.</li>
+            <li>Gold soap is worth 5×. Green soap is a magnet: for 7 seconds, nearby soap flies to you.</li>
             <li>Don't step on the roaches. Squashing one costs a strike.</li>
           </ol>
         </div>
@@ -711,6 +749,7 @@ button{font:inherit}
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const MAX_STRIKES = 3;
+  const MAGNET_TIME = 7;
   const RANKS = [
     [0, 'Fresh Fish'],
     [150, 'Shower Rookie'],
@@ -733,7 +772,7 @@ button{font:inherit}
 
   const S = {
     mode: 'menu', score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1,
-    spawnIn: 0, attractIn: 0.4, lastMult: 1,
+    spawnIn: 0, attractIn: 0.4, lastMult: 1, magnet: 0,
     best: Number(store.get('best', 0)) || 0,
     muted: store.get('muted', false) === true,
     inmate: 'C-' + (1000 + Math.floor(Math.random() * 9000)),
@@ -792,6 +831,7 @@ button{font:inherit}
       miss() { noise(0.4, 0.3, 650); tone(240, 70, 0.32, 'square', 0.05); },
       roach() { noise(0.12, 0.35, 2200); tone(150, 55, 0.3, 'sawtooth', 0.08, 0.03); },
       level() { tone(520, 700, 0.1, 'square', 0.05); tone(700, 1040, 0.14, 'square', 0.05, 0.1); },
+      magnet() { tone(180, 720, 0.32, 'sawtooth', 0.05); tone(360, 1440, 0.32, 'sine', 0.08, 0.02); tone(900, 1800, 0.18, 'triangle', 0.05, 0.3); },
       over() { [[392, 370], [370, 349], [349, 262]].forEach(([a, b], i) => tone(a, b, i === 2 ? 0.7 : 0.26, 'triangle', 0.12, i * 0.28)); },
     };
   })();
@@ -879,10 +919,12 @@ button{font:inherit}
       const r = Math.random();
       if (r < roachChance) type = 'roach';
       else if (r < roachChance + 0.07) type = 'gold';
+      else if (lvl >= 2 && S.magnet <= 0 && r < roachChance + 0.13 &&
+               !spritesEl.querySelector('.sprite.green:not([data-done])')) type = 'green';
     }
 
     const base = clamp(Math.min(W, H) * 0.16, 64, 104);
-    const sw = type === 'gold' ? base * 0.85 : type === 'roach' ? base * 0.78 : base;
+    const sw = type === 'gold' ? base * 0.85 : type === 'green' ? base * 0.88 : type === 'roach' ? base * 0.78 : base;
     const hit = Math.round(sw * 0.22);
     const boxW = sw + hit * 2, boxH = sw * 0.62 + hit * 2;
     const fromLeft = Math.random() < 0.5;
@@ -924,10 +966,12 @@ button{font:inherit}
     vars['--dur'] = dur.toFixed(2) + 's';
     for (const k in vars) el.style.setProperty(k, vars[k]);
     el.style.zIndex = String(Math.round((y0 + y1) / 2 + boxH - hit));
+    el.dataset.cx = String(hit + sw / 2);
+    el.dataset.cy = String(hit + sw * 0.31);
 
     el.innerHTML = type === 'roach'
       ? '<div class="shadow"></div><div class="body"><div class="legs"></div><div class="shell"></div><div class="head"></div></div>'
-      : `<div class="trail"></div><div class="shadow"></div><div class="body"><span>${type === 'gold' ? '24K' : 'SOAP'}</span></div>`;
+      : `<div class="trail"></div><div class="shadow"></div><div class="body"><span>${type === 'gold' ? '24K' : type === 'green' ? '' : 'SOAP'}</span></div>`;
 
     const exitSide = boomerang ? (fromLeft ? 'left' : 'right') : (fromLeft ? 'right' : 'left');
     const exitY = y1 + boxH / 2;
@@ -967,7 +1011,7 @@ button{font:inherit}
 
   const heroEl = document.createElement('div');
   heroEl.className = 'hero';
-  heroEl.innerHTML = '<div class="hero-shadow"></div>' + FIGURE;
+  heroEl.innerHTML = '<div class="hero-aura"></div><div class="hero-shadow"></div>' + FIGURE;
   spritesEl.appendChild(heroEl);
   $$('.figure').forEach((f) => { f.innerHTML = FIGURE; });
   const overFigure = $('#overFigure');
@@ -1102,9 +1146,11 @@ button{font:inherit}
     }
 
     const gold = el.classList.contains('gold');
+    const green = el.classList.contains('green');
     el.classList.add('caught');
     setTimeout(() => el.remove(), 420);
     heroEl.classList.toggle('gold-held', gold);
+    heroEl.classList.toggle('green-held', green);
     heroReact('grab', 560);
     if (decor) return;
 
@@ -1116,6 +1162,10 @@ button{font:inherit}
     popText('+' + pts, sp.x, sp.y - 20, gold ? 'gold' : '');
     bubbles(sp.x, sp.y, gold ? 16 : 10);
     if (gold) sfx.gold(); else sfx.grab(S.combo);
+    if (green) {
+      popText('Magnet!', sp.x, sp.y - 54, 'green');
+      startMagnet();
+    }
 
     const lvl = 1 + Math.floor(S.caught / 5);
     if (lvl > S.level) {
@@ -1123,6 +1173,67 @@ button{font:inherit}
       if (lvl <= 12) { banner('Faster'); sfx.level(); }
     }
     renderHUD(true);
+  }
+
+  /* ---------- green soap: a magnet that pulls nearby soap to him ---------- */
+  const powerEl = $('#power'), powerBar = $('#powerBar');
+  const pulled = new Map(); // sprite element -> { x, y, v } while it homes in on him
+
+  const magnetRadius = () => clamp(Math.min(stage.clientWidth, stage.clientHeight) * 0.42, 170, 320);
+
+  function startMagnet() {
+    S.magnet = MAGNET_TIME;
+    heroEl.style.setProperty('--aura', (magnetRadius() / hero.k).toFixed(1) + 'px');
+    heroEl.classList.add('magnet');
+    heroEl.classList.remove('magnet-ending');
+    powerEl.classList.remove('ending');
+    powerEl.hidden = false;
+    sfx.magnet();
+  }
+
+  function stopMagnet() {
+    S.magnet = 0;
+    heroEl.classList.remove('magnet', 'magnet-ending');
+    powerEl.hidden = true;
+    powerEl.classList.remove('ending');
+  }
+
+  function updateMagnet(dt, list) {
+    if (S.mode !== 'play') return;
+    const cx = hero.x, cy = hero.y - 40 * hero.k;
+    if (S.magnet > 0) {
+      S.magnet -= dt;
+      if (S.magnet <= 0) stopMagnet();
+      else {
+        const ending = S.magnet < 1.5;
+        powerBar.style.transform = `scaleX(${(S.magnet / MAGNET_TIME).toFixed(3)})`;
+        heroEl.classList.toggle('magnet-ending', ending);
+        powerEl.classList.toggle('ending', ending);
+        // Any soap inside the field stops sliding and gets pulled in.
+        const R = magnetRadius();
+        for (const sp of list) {
+          const el = sp.el;
+          if (pulled.has(el) || el.classList.contains('roach') || el.classList.contains('decor')) continue;
+          if (Math.hypot(sp.x - cx, sp.y - cy) > R) continue;
+          const [tx, ty] = getComputedStyle(el).translate.split(' ').map(parseFloat);
+          el.style.animation = 'none';
+          el.classList.add('mag');
+          pulled.set(el, { x: tx || 0, y: ty || 0, v: 0 });
+        }
+      }
+    }
+    // Soap already caught by the field keeps flying in, even after the magnet runs out.
+    for (const [el, m] of pulled) {
+      if (!el.isConnected || el.dataset.done) { pulled.delete(el); continue; }
+      const ox = Number(el.dataset.cx), oy = Number(el.dataset.cy);
+      const dx = hero.x - (m.x + ox), dy = hero.y - 24 * hero.k - (m.y + oy);
+      const d = Math.hypot(dx, dy);
+      m.v = Math.min(1500, m.v + 2600 * dt);
+      const step = Math.min(d, m.v * dt);
+      if (d > 0.5) { m.x += (dx / d) * step; m.y += (dy / d) * step; }
+      el.style.translate = `${m.x.toFixed(1)}px ${m.y.toFixed(1)}px`;
+      el.style.zIndex = String(Math.round(m.y + oy + 20));
+    }
   }
 
   function miss(side, y, roach) {
@@ -1153,6 +1264,8 @@ button{font:inherit}
     hero.tx = hero.x;
     hero.ty = hero.y;
     heroEl.classList.remove('grab', 'oops');
+    pulled.clear();
+    stopMagnet();
     Object.assign(S, { score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1, spawnIn: 0.7, lastMult: 1 });
     stage.classList.remove('paused');
     setMode('play');
@@ -1179,6 +1292,8 @@ button{font:inherit}
     setMode('over');
     stage.classList.remove('paused');
     for (const sp of spritesEl.querySelectorAll('.sprite')) { sp.dataset.done = '1'; sp.classList.add('gone'); }
+    pulled.clear();
+    stopMagnet();
 
     const record = S.score > 0 && S.score > S.best;
     if (record) { S.best = S.score; store.set('best', S.best); }
@@ -1212,6 +1327,7 @@ button{font:inherit}
     if (S.mode !== 'pause' && (hero.ready || sizeHero())) {
       const list = readSprites();
       moveHero(dt, list);
+      updateMagnet(dt, list);
       checkPickups(list);
     }
     if (S.mode === 'play') {
