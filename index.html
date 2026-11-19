@@ -267,7 +267,8 @@ button{font:inherit}
 /* ---------- the warrior: bald, inked, wearing nothing but suds ---------- */
 .hero{position:absolute; left:0; top:0; width:0; height:0; scale:var(--k, 1)}
 .hero-shadow{position:absolute; left:-38px; top:-9px; width:76px; height:18px; border-radius:50%; background:radial-gradient(closest-side, rgba(15,25,30,.45), rgba(15,25,30,0))}
-.rig{position:absolute; left:-50px; bottom:0; width:100px; height:170px; transform-origin:50% 100%; transition:rotate .15s}
+.rig{position:absolute; left:-50px; bottom:0; width:100px; height:170px; transform-origin:50% 100%; rotate:calc(var(--lean, 0deg) * var(--dir, 1)); transition:rotate .15s}
+.face-left{--dir:-1}
 .face-left .rig{scale:-1 1}
 .face-left .tat-text{scale:-1 1}
 .rig > *, .rig i, .rig b, .rig span{position:absolute; display:block}
@@ -357,7 +358,7 @@ button{font:inherit}
 
 .hero:not(.running) .torso, .figure .torso{animation:breathe 2.6s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.025, 1.015)}}
-.hero.running .rig{rotate:7deg; animation:bob .34s linear infinite}
+.hero.running .rig{--lean:7deg; animation:bob .34s linear infinite}
 .hero.running .leg-front{animation:stride .34s ease-in-out infinite}
 .hero.running .leg-back{animation:stride .34s ease-in-out -.17s infinite}
 .hero.running .arm-front{animation:swing .34s ease-in-out -.17s infinite}
@@ -408,6 +409,146 @@ button{font:inherit}
 @keyframes sway{0%,100%{rotate:5deg} 50%{rotate:-5deg}}
 .v-koska .mouth{left:24px; top:34px; width:11px; height:5px; rotate:-4deg; border-radius:45% 45% 50% 50% / 40% 40% 60% 60%; background:linear-gradient(180deg, #c8102e 0 42%, #6e0a1a 42% 56%, #e2345a 56%)}
 .hero.grab.v-koska .mouth{top:33px; height:6px; background:#3a1a14; box-shadow:inset 0 0 0 1.6px #d1153a, inset 4px 0 0 var(--gold)}
+
+/* ---------- Mällu, the block boss: same rig, skinny and shifty ---------- */
+.v-mallu{--skin:#e6b796; --skin-hi:#f5d2b6; --skin-shade:#c4906d; --skin-deep:#a0704f; --hair:#6b5137}
+.rig .ribs, .rig .tat-cat, .rig .mpb, .rig .wisps, .rig .bags, .rig .towel, .rig .head-suds, .rig .whistle{display:none}
+.v-mallu .rig .ribs, .v-mallu .rig .tat-cat, .v-mallu .rig .mpb, .v-mallu .rig .wisps, .v-mallu .rig .bags, .v-mallu .rig .towel{display:block}
+.v-mallu .rig .tat-church{display:none}
+
+/* skinny, shifty build on the same rig: narrow sloped shoulders, thin limbs, ribs showing */
+.v-mallu .torso{
+  left:31px; top:52px; width:40px; height:64px;
+  border-radius:16px 16px 12px 12px / 14px 14px 20px 20px;
+  background:linear-gradient(90deg, var(--skin-shade), var(--skin) 26%, var(--skin-hi) 58%, var(--skin) 86%, var(--skin-shade));
+  box-shadow:inset 0 -5px 6px rgba(150,90,60,.22);
+}
+.v-mallu .torso::before{left:3px; width:15px; top:12px; height:7px}
+.v-mallu .torso::after{right:3px; width:15px; top:12px; height:7px}
+.v-mallu .ribs{
+  left:3px; right:3px; top:21px; height:20px;
+  background:repeating-linear-gradient(180deg, transparent 0 4px, rgba(150,85,55,.32) 4px 5.5px);
+  -webkit-mask-image:linear-gradient(90deg, #000 0 30%, transparent 42% 58%, #000 70%);
+  mask-image:linear-gradient(90deg, #000 0 30%, transparent 42% 58%, #000 70%);
+}
+.v-mallu .torso .sl{left:2px; top:3px; width:11px; height:11px}
+.v-mallu .torso .sr{right:2px; top:3px; width:11px; height:11px}
+/* cat tattoo: the old prison mark for a thief */
+.v-mallu .tat-cat{
+  left:13px; top:18px; width:14px; height:12px;
+  background:
+    radial-gradient(circle at 32% 60%, var(--skin-hi) 0 1.2px, rgba(0,0,0,0) 1.5px),
+    radial-gradient(circle at 68% 60%, var(--skin-hi) 0 1.2px, rgba(0,0,0,0) 1.5px),
+    var(--tat);
+  clip-path:polygon(0 0, 32% 32%, 68% 32%, 100% 0, 100% 72%, 78% 100%, 22% 100%, 0 72%);
+}
+.v-mallu .tat-text{top:37px; font-size:12px}
+.v-mallu .neck{left:44px; top:38px; width:14px; height:18px}
+.v-mallu .arm{top:55px; width:11px; height:56px}
+.v-mallu .arm::after{left:-1.5px; bottom:-6px; width:14px; height:13px}
+.v-mallu .arm-front{left:24px}
+.v-mallu .arm-back{left:67px}
+.v-mallu .leg{top:112px; width:14px; height:50px}
+.v-mallu .leg-front{left:36px}
+.v-mallu .leg-back{left:52px}
+.v-mallu .leg::after{left:1px; width:22px; height:9px}
+.v-mallu .knee{left:2px; width:10px; height:10px}
+
+/* head: male-pattern baldness (shiny crown, hair left on the back and sides, a few lonely strands on top) */
+.v-mallu .mpb{
+  left:0; top:0; width:100%; height:100%;
+  background:radial-gradient(circle, rgba(40,28,18,.35) 0 .7px, rgba(40,28,18,0) 1px) 0 0 / 2.5px 2.5px, var(--hair);
+  clip-path:polygon(0 20%, 16% 17%, 38% 25%, 52% 38%, 50% 58%, 40% 60%, 34% 80%, 22% 100%, 0 100%);
+}
+.v-mallu .wisps{left:50px; top:-7px; width:14px; height:10px}
+.v-mallu .wisps::before, .v-mallu .wisps::after{content:""; position:absolute; bottom:0; width:9px; height:8px; border-top:1.5px solid var(--hair); border-radius:60% 60% 0 0}
+.v-mallu .wisps::before{left:0; rotate:-15deg}
+.v-mallu .wisps::after{left:5px; rotate:20deg}
+.v-mallu .scar{left:17px; top:4px}
+.v-mallu .brow{left:12px; top:15px; width:26px; height:3.5px; rotate:6deg; border-radius:45% 55% 40% 50%; background:#4f3a28}
+.v-mallu .eye{left:25px; top:19px; width:7px; height:5px; border-radius:50% 50% 45% 45%; background:radial-gradient(circle at var(--lx, 22%) var(--ly, 58%), #1e1512 0 1.7px, #fff 1.9px); box-shadow:inset 0 1.6px 0 var(--skin-shade)}
+.v-mallu .bags{left:24px; top:23px; width:9px; height:3px; border-bottom:1.5px solid rgba(110,70,90,.45); border-radius:0 0 50% 50%}
+.v-mallu .tear{top:28px}
+.v-mallu .mouth{left:24px; top:35px; width:11px; height:3px; rotate:-12deg; border-radius:0 0 6px 6px; background:#5b2b22}
+.pose-windup .mouth, .pose-snap .mouth{top:33px; height:5px; rotate:-6deg; background:linear-gradient(90deg, #f3efe4 0 40%, #3a1a14 40% 55%, #f3efe4 55%) 0 0 / 100% 45% no-repeat, #3a1a14}
+.pose-freeze .mouth{left:28px; top:35px; width:5px; height:5px; rotate:0deg; border-radius:50%; background:#3a1a14}
+
+/* the weapon: a prison towel twisted into a whip, gripped in the front fist */
+.v-mallu .towel{left:.5px; top:46px; width:10px; height:42px; transform-origin:50% 2px; rotate:var(--towel-r, 22deg); border-radius:5px; background:repeating-linear-gradient(55deg, #f4f8f9 0 5px, #bfe0e6 5px 8px)}
+.v-mallu .towel-tip{left:1px; top:38px; width:8px; height:30px; transform-origin:50% 2px; rotate:var(--tip-r, 18deg); border-radius:4px 4px 6px 6px; background:inherit; clip-path:polygon(0 0, 100% 0, 100% 88%, 80% 100%, 62% 90%, 45% 100%, 28% 90%, 10% 100%, 0 90%)}
+
+/* pose: sneaking (creeps while your back is turned) */
+.pose-sneak .rig{--lean:9deg; animation:tiptoe .9s ease-in-out infinite}
+@keyframes tiptoe{0%,100%{translate:0 0} 50%{translate:0 -6px}}
+.pose-sneak .leg-front{animation:sneakStep .9s ease-in-out infinite}
+.pose-sneak .leg-back{animation:sneakStep .9s ease-in-out -.45s infinite}
+@keyframes sneakStep{0%,100%{rotate:16deg} 50%{rotate:-16deg}}
+.pose-sneak .leg::after{transform-origin:85% 50%; rotate:28deg}
+.pose-sneak .arm-front{rotate:-100deg; --towel-r:28deg; --tip-r:26deg; animation:creep .45s ease-in-out infinite alternate}
+.pose-sneak .arm-back{rotate:-82deg; animation:creep .45s ease-in-out -.2s infinite alternate}
+@keyframes creep{to{translate:0 2px}}
+
+/* pose: caught looking, so he pretends to wash and whistles */
+.pose-freeze{--lx:58%; --ly:26%}
+.pose-freeze .rig{--lean:-2deg}
+.pose-freeze .arm-front{rotate:-168deg; --towel-r:95deg; --tip-r:10deg; animation:scrub .22s ease-in-out infinite alternate}
+@keyframes scrub{from{rotate:-160deg} to{rotate:-174deg}}
+.pose-freeze .brow{top:10px; rotate:-3deg}
+.pose-freeze .rig .head-suds, .pose-freeze .rig .whistle{display:block}
+.head-suds{
+  left:30px; top:-12px; width:44px; height:20px;
+  background:
+    radial-gradient(circle at 10px 12px, #fff 0 7px, rgba(255,255,255,0) 7.5px),
+    radial-gradient(circle at 22px 8px, #fff 0 9px, rgba(255,255,255,0) 9.5px),
+    radial-gradient(circle at 34px 12px, #f3f8fb 0 7px, rgba(255,255,255,0) 7.5px);
+  filter:drop-shadow(0 1px 0 rgba(110,130,150,.55));
+}
+.whistle{left:66px; top:26px; font:700 17px/1 var(--font-type); color:var(--ink); animation:note 1.2s ease-out infinite}
+.face-left .whistle{scale:-1 1}
+@keyframes note{from{transform:translate(0, 0); opacity:1} to{transform:translate(12px, -18px) rotate(15deg); opacity:0}}
+
+/* pose: wind-up (the warning before a snap) */
+.pose-windup{--lx:80%; --ly:58%}
+.pose-windup .rig{--lean:-7deg}
+.pose-windup .arm-front{rotate:150deg; --towel-r:-25deg; --tip-r:-30deg}
+.pose-windup .arm-back{rotate:-40deg}
+.pose-windup .brow{top:15px; rotate:16deg}
+.pose-windup .leg-front{rotate:-14deg}
+.pose-windup .leg-back{rotate:14deg}
+
+/* pose: snap */
+.pose-snap{--lx:85%; --ly:58%}
+.pose-snap .rig{--lean:12deg}
+.pose-snap .arm-front{rotate:-100deg; --towel-r:0deg; --tip-r:-8deg}
+.pose-snap .leg-front{rotate:-26deg}
+.pose-snap .leg-back{rotate:22deg}
+.pose-snap .brow{top:15px; rotate:16deg}
+
+
+/* boss fight UI */
+.stage.boss-fight .sign{opacity:0; transition:opacity .4s}
+.boss-bar{
+  position:absolute; left:50%; top:calc(100% - 4px); translate:-50% 0; pointer-events:none;
+  width:min(300px, calc(100% - 32px)); display:grid; gap:6px; padding:7px 10px 9px;
+  color:var(--board-text); background-color:var(--board);
+  background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.04) 0 4px, rgba(0,0,0,.35) 4px 5px);
+  border:3px solid var(--stamp); border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,.35);
+}
+.boss-bar.hit{animation:bump .25s ease-out}
+.boss-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.boss-name{font:20px/1 var(--font-display); letter-spacing:.04em; text-transform:uppercase; color:var(--strike)}
+.boss-sub{font:700 10px/1 var(--font-type); letter-spacing:.16em; text-transform:uppercase; opacity:.75; font-variant-numeric:tabular-nums}
+.boss-hp{display:grid; grid-template-columns:repeat(var(--n, 10), 1fr); gap:3px}
+.boss-hp i{height:8px; border-radius:2px; background:var(--strike); transition:background .2s}
+.boss-hp i.gone{background:rgba(244,244,240,.15)}
+.stage.boss-fight .power{top:calc(100% + 58px)}
+.boss-hint{
+  position:absolute; left:50%; top:205px; translate:-50% 0; width:min(320px, calc(100% - 32px));
+  padding:10px 14px 11px; text-align:center; font:700 15px/1.35 var(--font-type);
+  color:var(--board-text); background:var(--board); border:3px solid var(--stamp); border-radius:6px;
+  animation:hintIn 5s ease-out .9s both;
+}
+@keyframes hintIn{0%{opacity:0; transform:translateY(8px)} 6%,86%{opacity:1; transform:none} 100%{opacity:0}}
 
 /* the same figure, posed for mugshots */
 .figure{position:absolute; width:100px; height:170px; pointer-events:none}
@@ -636,6 +777,7 @@ button{font:inherit}
       </div>
       <div class="combo" id="combo" hidden>×2</div>
       <div class="power" id="power" hidden><span class="power-label">Magnet</span><span class="power-track"><i id="powerBar"></i></span></div>
+      <div class="boss-bar" id="bossBar" hidden><div class="boss-head"><span class="boss-name">Mällu</span><span class="boss-sub" id="bossSub">10 bars to go</span></div><div class="boss-hp" id="bossHp"></div></div>
     </div>
     <div class="hud-group">
       <div class="board" id="strikesBoard" aria-label="Strikes: 0 of 3">
@@ -773,6 +915,7 @@ button{font:inherit}
   const S = {
     mode: 'menu', score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1,
     spawnIn: 0, attractIn: 0.4, lastMult: 1, magnet: 0,
+    bossAt: 5, bossVisit: 0, forceGold: false, lastStrike: '',
     best: Number(store.get('best', 0)) || 0,
     muted: store.get('muted', false) === true,
     inmate: 'C-' + (1000 + Math.floor(Math.random() * 9000)),
@@ -831,6 +974,11 @@ button{font:inherit}
       miss() { noise(0.4, 0.3, 650); tone(240, 70, 0.32, 'square', 0.05); },
       roach() { noise(0.12, 0.35, 2200); tone(150, 55, 0.3, 'sawtooth', 0.08, 0.03); },
       level() { tone(520, 700, 0.1, 'square', 0.05); tone(700, 1040, 0.14, 'square', 0.05, 0.1); },
+      bossIn() { tone(110, 104, 0.22, 'triangle', 0.16); tone(98, 92, 0.4, 'triangle', 0.16, 0.26); },
+      whistle() { tone(1320, 1480, 0.12, 'sine', 0.05); tone(1480, 1180, 0.16, 'sine', 0.05, 0.14); },
+      windup() { tone(200, 620, 0.45, 'sawtooth', 0.03); noise(0.4, 0.08, 1200); },
+      snap() { noise(0.08, 0.5, 6000); tone(1800, 600, 0.06, 'square', 0.06); },
+      bossOut() { tone(392, 523, 0.15, 'triangle', 0.1); tone(523, 784, 0.25, 'triangle', 0.1, 0.15); tone(784, 1046, 0.3, 'triangle', 0.08, 0.35); },
       magnet() { tone(180, 720, 0.32, 'sawtooth', 0.05); tone(360, 1440, 0.32, 'sine', 0.08, 0.02); tone(900, 1800, 0.18, 'triangle', 0.05, 0.3); },
       over() { [[392, 370], [370, 349], [349, 262]].forEach(([a, b], i) => tone(a, b, i === 2 ? 0.7 : 0.26, 'triangle', 0.12, i * 0.28)); },
     };
@@ -915,12 +1063,13 @@ button{font:inherit}
 
     let type = 'soap';
     if (!decor) {
-      const roachChance = lvl >= 3 ? Math.min(0.22, 0.08 + (lvl - 3) * 0.025) : 0;
+      const roachChance = lvl >= 3 && !boss ? Math.min(0.22, 0.08 + (lvl - 3) * 0.025) : 0;
       const r = Math.random();
       if (r < roachChance) type = 'roach';
       else if (r < roachChance + 0.07) type = 'gold';
       else if (lvl >= 2 && S.magnet <= 0 && r < roachChance + 0.13 &&
                !spritesEl.querySelector('.sprite.green:not([data-done])')) type = 'green';
+      if (S.forceGold && type === 'soap') { type = 'gold'; S.forceGold = false; }
     }
 
     const base = clamp(Math.min(W, H) * 0.16, 64, 104);
@@ -1141,7 +1290,7 @@ button{font:inherit}
       el.classList.add('squished');
       setTimeout(() => el.remove(), 600);
       popText('Gross!', sp.x, sp.y - 24, 'bad');
-      miss(null, sp.y, true);
+      miss(null, sp.y, 'roach');
       return;
     }
 
@@ -1166,13 +1315,182 @@ button{font:inherit}
       popText('Magnet!', sp.x, sp.y - 54, 'green');
       startMagnet();
     }
+    if (boss && boss.state !== 'leave') hurtBoss(gold ? 3 : 1);
 
     const lvl = 1 + Math.floor(S.caught / 5);
     if (lvl > S.level) {
       S.level = lvl;
-      if (lvl <= 12) { banner('Faster'); sfx.level(); }
+      if (!boss && lvl >= S.bossAt) startBoss();
+      else if (!boss && lvl <= 12) { banner('Faster'); sfx.level(); }
     }
     renderHUD(true);
+  }
+
+  /* ---------- Mällu, the block boss ---------- */
+  // Same rig as the inmates; the v-mallu class swaps in his build, balding head and towel.
+  const MALLU = '<span class="rig">' +
+    '<span class="limb arm arm-back"></span>' +
+    '<span class="limb leg leg-back"><i class="tat tat-star knee"></i></span>' +
+    '<span class="limb leg leg-front"><i class="tat tat-star knee"></i></span>' +
+    '<span class="neck"></span>' +
+    '<span class="torso"><i class="ribs"></i><i class="tat tat-star sl"></i><i class="tat tat-star sr"></i>' +
+      '<i class="tat tat-cat"></i><span class="tat tat-text">Mällu</span></span>' +
+    '<span class="suds"></span>' +
+    '<span class="head"><i class="mpb"></i><i class="scar"></i><i class="brow"></i><i class="eye"></i><i class="bags"></i><i class="tear"></i><i class="mouth"></i></span>' +
+    '<span class="ear"></span><span class="nose"></span><span class="wisps"></span>' +
+    '<span class="head-suds"></span><span class="whistle">♪</span>' +
+    '<span class="limb arm arm-front"><i class="tat tat-wire"></i><i class="towel"><i class="towel-tip"></i></i></span>' +
+    '</span>';
+  const bossBar = $('#bossBar'), bossHp = $('#bossHp'), bossSub = $('#bossSub');
+  let boss = null;
+
+  const bossScale = () => hero.k * 1.4;
+
+  function bossHint(text) {
+    const el = document.createElement('div');
+    el.className = 'boss-hint';
+    el.textContent = text;
+    el.addEventListener('animationend', () => el.remove());
+    fx.appendChild(el);
+  }
+
+  function startBoss() {
+    S.bossVisit++;
+    const hp = 8 + 2 * S.bossVisit;
+    const W = stage.clientWidth, L = heroLimits();
+    const fromLeft = hero.face > 0; // he slips in behind your back
+    const el = document.createElement('div');
+    el.className = 'hero boss v-mallu';
+    el.innerHTML = '<div class="hero-shadow"></div>' + MALLU;
+    el.style.setProperty('--k', bossScale().toFixed(3));
+    spritesEl.appendChild(el);
+    boss = {
+      el, hp, state: 'sneak', t: 0, pose: '', frozen: false, lookT: 0, awayT: 0, whistleAt: 0,
+      x: fromLeft ? -20 : W + 20, y: clamp(hero.y + rand(-60, 60), L.minY, L.maxY), face: fromLeft ? 1 : -1,
+    };
+    bossHp.style.setProperty('--n', hp);
+    bossHp.innerHTML = '<i></i>'.repeat(hp);
+    renderBossHp();
+    bossBar.hidden = false;
+    stage.classList.add('boss-fight');
+    placeBoss();
+    banner('Mällu!');
+    bossHint(`Mällu sneaks up while your back is turned and snaps a wet towel. Face him and he freezes. Catch ${hp} bars to drive him off.`);
+    sfx.bossIn();
+  }
+
+  function removeBoss() {
+    if (boss) boss.el.remove();
+    boss = null;
+    bossBar.hidden = true;
+    stage.classList.remove('boss-fight');
+  }
+
+  function placeBoss() {
+    boss.el.style.translate = `${boss.x.toFixed(1)}px ${boss.y.toFixed(1)}px`;
+    boss.el.style.zIndex = String(Math.round(boss.y));
+    boss.el.classList.toggle('face-left', boss.face < 0);
+  }
+
+  function bossPose(p) {
+    if (boss.pose === p) return;
+    if (boss.pose) boss.el.classList.remove(boss.pose);
+    if (p) boss.el.classList.add(p);
+    boss.pose = p;
+  }
+
+  function renderBossHp() {
+    const left = Math.max(0, boss.hp);
+    bossHp.querySelectorAll('i').forEach((i, n) => i.classList.toggle('gone', n >= left));
+    bossSub.textContent = left === 1 ? '1 bar to go' : `${left} bars to go`;
+  }
+
+  function hurtBoss(n) {
+    boss.hp -= n;
+    renderBossHp();
+    restartAnim(bossBar, 'hit');
+    if (boss.hp > 0) return;
+    // Driven off: he runs for the nearest side, you get the bonus and the next bar is gold.
+    boss.state = 'leave';
+    boss.face = boss.x < stage.clientWidth / 2 ? -1 : 1;
+    const bonus = 500 * S.bossVisit;
+    S.score += bonus;
+    popText('+' + fmt(bonus), clamp(boss.x, 60, stage.clientWidth - 60), boss.y - 170 * bossScale(), 'gold');
+    banner('Mällu bailed');
+    S.forceGold = true;
+    S.bossAt = S.level + 5;
+    bossBar.hidden = true;
+    stage.classList.remove('boss-fight');
+    sfx.bossOut();
+  }
+
+  function towelSnap() {
+    const kb = bossScale();
+    sfx.snap();
+    const ahead = (hero.x - boss.x) * boss.face;
+    if (ahead < -15 * kb || ahead > 160 * kb || Math.abs(hero.y - boss.y) > 50 * kb) return;
+    const L = heroLimits();
+    hero.x = hero.tx = clamp(hero.x + boss.face * 110 * hero.k, L.minX, L.maxX);
+    hero.ty = hero.y;
+    popText('SNAP!', hero.x, hero.y - 150 * hero.k, 'bad');
+    miss(null, hero.y, 'towel');
+  }
+
+  function updateBoss(dt) {
+    if (!boss || S.mode !== 'play') return;
+    const b = boss, kb = bossScale(), W = stage.clientWidth;
+    b.t += dt;
+
+    if (b.state === 'leave') {
+      bossPose('running');
+      b.x += b.face * 520 * dt;
+      placeBoss();
+      if (b.x < -150 || b.x > W + 150) removeBoss();
+      return;
+    }
+    if (b.state === 'windup') {
+      if (b.t >= 0.55) { b.state = 'snap'; b.t = 0; bossPose('pose-snap'); towelSnap(); }
+      return;
+    }
+    if (b.state === 'snap') {
+      if (b.t >= 0.3) { b.state = 'recover'; b.t = 0; bossPose(''); }
+      return;
+    }
+    if (b.state === 'recover') {
+      if (b.t >= 0.8) { b.state = 'sneak'; b.t = 0; }
+      return;
+    }
+
+    // Sneaking: he only moves while your back is turned.
+    const dx = hero.x - b.x, dy = hero.y - b.y;
+    const facingHim = Math.abs(dx) < 8 || (dx < 0) === (hero.face > 0);
+    if (facingHim) { b.lookT += dt; b.awayT = 0; } else { b.awayT += dt; b.lookT = 0; }
+    if (!b.frozen && facingHim && b.lookT > 0.1) {
+      b.frozen = true;
+      if (performance.now() - b.whistleAt > 1500) { b.whistleAt = performance.now(); sfx.whistle(); }
+    } else if (b.frozen && !facingHim && b.awayT > 0.35) {
+      b.frozen = false;
+    }
+    if (b.frozen) { bossPose('pose-freeze'); return; }
+
+    bossPose('pose-sneak');
+    if (Math.abs(dx) > 6) b.face = dx > 0 ? 1 : -1;
+    if (Math.abs(dx) < 105 * kb && Math.abs(dy) < 42 * kb) {
+      b.state = 'windup'; b.t = 0;
+      bossPose('pose-windup');
+      sfx.windup();
+      placeBoss();
+      return;
+    }
+    const side = dx > 0 ? 1 : -1;
+    const tx = hero.x - side * 80 * kb, ty = hero.y;
+    const mx = tx - b.x, my = ty - b.y, d = Math.hypot(mx, my);
+    const speed = clamp(W * 0.3 + 80, 170, 300) * (1 + 0.15 * (S.bossVisit - 1));
+    const step = Math.min(d, speed * dt);
+    if (d > 0.5) { b.x += (mx / d) * step; b.y += (my / d) * step; }
+    const L = heroLimits();
+    b.y = clamp(b.y, L.minY, L.maxY);
+    placeBoss();
   }
 
   /* ---------- green soap: a magnet that pulls nearby soap to him ---------- */
@@ -1236,8 +1554,9 @@ button{font:inherit}
     }
   }
 
-  function miss(side, y, roach) {
+  function miss(side, y, kind) {
     S.strikes++;
+    S.lastStrike = kind || 'escape';
     S.combo = 0;
     if (side) {
       const W = stage.clientWidth, H = stage.clientHeight;
@@ -1246,7 +1565,7 @@ button{font:inherit}
     }
     restartAnim(world, 'shake');
     heroReact('oops', 520);
-    if (roach) sfx.roach(); else sfx.miss();
+    if (kind === 'roach') sfx.roach(); else if (kind !== 'towel') sfx.miss();
     renderHUD();
     if (S.strikes >= MAX_STRIKES) gameOver();
   }
@@ -1266,7 +1585,9 @@ button{font:inherit}
     heroEl.classList.remove('grab', 'oops');
     pulled.clear();
     stopMagnet();
-    Object.assign(S, { score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1, spawnIn: 0.7, lastMult: 1 });
+    removeBoss();
+    Object.assign(S, { score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1, spawnIn: 0.7, lastMult: 1,
+      bossAt: 5, bossVisit: 0, forceGold: false, lastStrike: '' });
     stage.classList.remove('paused');
     setMode('play');
     show(null);
@@ -1294,6 +1615,7 @@ button{font:inherit}
     for (const sp of spritesEl.querySelectorAll('.sprite')) { sp.dataset.done = '1'; sp.classList.add('gone'); }
     pulled.clear();
     stopMagnet();
+    removeBoss();
 
     const record = S.score > 0 && S.score > S.best;
     if (record) { S.best = S.score; store.set('best', S.best); }
@@ -1306,7 +1628,7 @@ button{font:inherit}
     $('#overCaught').textContent = fmt(S.caught);
     $('#overCombo').textContent = fmt(S.bestCombo);
     const stamp = $('#overStamp');
-    stamp.textContent = record ? 'New record' : S.strikes >= MAX_STRIKES ? 'Three strikes' : 'Clocked out';
+    stamp.textContent = record ? 'New record' : S.strikes < MAX_STRIKES ? 'Clocked out' : S.lastStrike === 'towel' ? 'Towel snapped' : 'Three strikes';
 
     S.attractIn = 1.4;
     clearTimeout(overTimer);
@@ -1327,6 +1649,7 @@ button{font:inherit}
     if (S.mode !== 'pause' && (hero.ready || sizeHero())) {
       const list = readSprites();
       moveHero(dt, list);
+      updateBoss(dt);
       updateMagnet(dt, list);
       checkPickups(list);
     }
@@ -1334,7 +1657,7 @@ button{font:inherit}
       S.spawnIn -= dt;
       if (S.spawnIn <= 0) {
         spawn(false);
-        const base = Math.max(0.42, 1.5 * Math.pow(0.9, S.level - 1));
+        const base = Math.max(0.42, 1.5 * Math.pow(0.9, S.level - 1)) * (boss ? 1.1 : 1);
         S.spawnIn = base * rand(0.65, 1.35);
       }
     } else if ((S.mode === 'menu' || S.mode === 'over') && !reduceMotion.matches) {

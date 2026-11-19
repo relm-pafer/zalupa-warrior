@@ -22,6 +22,10 @@ It's one HTML file with its own CSS and JavaScript. There is no build step and n
 - Don't step on the roaches. Each one costs a strike.
 - The game speeds up every 5 bars caught.
 
+### Mällu, the block boss
+
+At level 5 Mällu sneaks into the showers, and he comes back every 5 levels after you drive him off. He only creeps toward you while your inmate has his back turned; face him and he freezes and pretends to wash. If he gets close he winds up and snaps a wet towel, which costs a strike and knocks you back. Every bar you catch knocks down his health (gold counts triple). Drive him off for a bonus of 500 points per visit, and the next bar is gold.
+
 Your personal best and chosen inmate are saved in the browser's local storage.
 
 ## Run it locally
