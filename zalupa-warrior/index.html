@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Courier+Prime:wght@400;700&family=UnifrakturMaguntia&display=swap">
 <style>
 /* Layout: one full-screen prison shower — tiled wall above, wet floor below; soap slides across the floor,
    HUD letterboards sit on top, and booking-card overlays handle start / pause / shift report. */
@@ -22,8 +22,10 @@
   --soap:#f8cfdb; --soap-deep:#e592ae;
   --gold:#f5c542; --gold-deep:#c98a12;
   --stamp:#c42b1f; --strike:#ff5145;
+  --skin:#e3ad86; --skin-hi:#f4c7a4; --skin-shade:#c48a62; --skin-deep:#a26d4c; --tat:#2e4e6f;
   --font-display:"Black Ops One", Impact, "Arial Black", sans-serif;
   --font-type:"Courier Prime", "Courier New", Courier, monospace;
+  --font-tattoo:"UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
   color-scheme:light;
   padding-top:env(safe-area-inset-top, 0px);
   padding-bottom:env(safe-area-inset-bottom, 0px);
@@ -42,7 +44,8 @@ button{font:inherit}
 
 /* ---------- stage ---------- */
 .stage{position:relative; height:100%; overflow:hidden; touch-action:none; isolation:isolate}
-.world{position:absolute; inset:0}
+.stage[data-mode="play"]{cursor:crosshair}
+.world{position:absolute; inset:0; z-index:0}
 
 .wall{
   --t:clamp(34px, 6.4vmin, 54px);
@@ -141,9 +144,9 @@ button{font:inherit}
 @keyframes drift{to{transform:translate(6vw, -3vh) scale(1.15)}}
 
 /* ---------- sprites: soap, gold soap, roaches ---------- */
-.sprites{position:absolute; inset:0}
+.sprites{position:absolute; inset:0; pointer-events:none}
 .sprite{
-  position:absolute; left:0; top:0; padding:var(--hit); cursor:grab;
+  position:absolute; left:0; top:0; padding:var(--hit);
   translate:var(--x0) var(--y0);
   animation:slide var(--dur) var(--ease) forwards;
   will-change:translate;
@@ -234,6 +237,106 @@ button{font:inherit}
 @keyframes squish{0%{transform:scale(1)} 30%{transform:scale(1.3, .35)} 100%{transform:scale(1.3, .35); opacity:0}}
 .sprite.gone{opacity:0; transition:opacity .35s}
 
+/* ---------- the warrior: bald, inked, wearing nothing but suds ---------- */
+.hero{position:absolute; left:0; top:0; width:0; height:0; scale:var(--k, 1)}
+.hero-shadow{position:absolute; left:-38px; top:-9px; width:76px; height:18px; border-radius:50%; background:radial-gradient(closest-side, rgba(15,25,30,.45), rgba(15,25,30,0))}
+.rig{position:absolute; left:-50px; bottom:0; width:100px; height:170px; transform-origin:50% 100%; transition:rotate .15s}
+.face-left .rig{scale:-1 1}
+.face-left .tat-text{scale:-1 1}
+.rig > *, .rig i, .rig b, .rig span{position:absolute; display:block}
+.limb{border-radius:9px; transform-origin:50% 7px}
+.arm{top:55px; width:15px; height:50px}
+.arm::after{content:""; position:absolute; left:-1px; bottom:-7px; width:17px; height:16px; border-radius:50%}
+.arm-back{left:65px; rotate:-10deg; background:linear-gradient(90deg, var(--skin-deep), var(--skin-shade))}
+.arm-back::after{background:var(--skin-deep)}
+.arm-front{left:20px; rotate:10deg; background:linear-gradient(90deg, var(--skin-shade), var(--skin) 50%, var(--skin-hi))}
+.arm-front::after{background:var(--skin)}
+.leg{top:110px; width:18px; height:50px}
+.leg::after{content:""; position:absolute; left:2px; bottom:-5px; width:25px; height:10px; border-radius:5px 10px 4px 4px}
+.leg-back{left:52px; background:linear-gradient(90deg, var(--skin-deep), var(--skin-shade))}
+.leg-back::after{background:var(--skin-deep)}
+.leg-front{left:31px; background:linear-gradient(90deg, var(--skin-shade), var(--skin) 55%, var(--skin-hi))}
+.leg-front::after{background:var(--skin-shade)}
+.neck{left:41px; top:40px; width:20px; height:16px; border-radius:4px; background:linear-gradient(90deg, var(--skin-shade), var(--skin) 60%)}
+.torso{
+  left:23px; top:52px; width:56px; height:66px; transform-origin:50% 100%;
+  border-radius:24px 24px 20px 20px / 20px 20px 26px 26px;
+  background:linear-gradient(90deg, var(--skin-shade), var(--skin) 26%, var(--skin-hi) 60%, var(--skin) 88%, var(--skin-shade));
+  box-shadow:inset 0 -6px 8px rgba(150,80,50,.25);
+}
+.torso::before, .torso::after{content:""; position:absolute; top:15px; width:21px; height:9px; border-bottom:2px solid rgba(140,80,50,.4); border-radius:0 0 50% 50%}
+.torso::before{left:6px}
+.torso::after{right:6px}
+.head{
+  left:30px; top:0; width:42px; height:47px; overflow:hidden;
+  border-radius:46% 50% 44% 42% / 50%;
+  background:
+    radial-gradient(circle at 62% 20%, rgba(255,255,255,.65) 0 3px, rgba(255,255,255,0) 9px),
+    linear-gradient(90deg, var(--skin-shade), var(--skin) 32%, var(--skin-hi) 66%, var(--skin));
+}
+.head::after{content:""; position:absolute; left:0; right:0; bottom:0; height:42%; background:radial-gradient(circle, rgba(60,40,30,.42) .7px, rgba(60,40,30,0) 1.1px) 0 0 / 3px 3px}
+.ear{left:32px; top:19px; width:10px; height:14px; border-radius:50%; background:var(--skin-shade); box-shadow:inset 2px 0 0 var(--skin-deep)}
+.nose{left:64px; top:20px; width:8px; height:10px; border-radius:40% 70% 60% 40%; background:var(--skin); box-shadow:-1px 2px 0 var(--skin-shade)}
+.scar{left:8px; top:7px; width:14px; height:5px; rotate:-24deg; background:linear-gradient(rgba(150,70,60,.7), rgba(150,70,60,.7)) 0 50% / 100% 1.5px no-repeat, repeating-linear-gradient(90deg, rgba(150,70,60,.7) 0 1px, transparent 1px 3px)}
+.brow{left:22px; top:15px; width:14px; height:3px; border-radius:2px; background:#5a3a2a; rotate:14deg}
+.eye{left:26px; top:20px; width:4px; height:4.5px; border-radius:50%; background:#1e1512}
+.tear{left:24px; top:27px; width:4px; height:4px; border-radius:0 50% 50% 50%; rotate:45deg; background:var(--tat)}
+.mouth{left:25px; top:35px; width:10px; height:2.5px; border-radius:2px; rotate:-6deg; background:#5b2b22}
+.tat{opacity:.9}
+.tat-star{
+  width:13px; height:13px;
+  background:radial-gradient(circle, var(--skin-hi) 0 15%, var(--tat) 17%);
+  clip-path:polygon(50% 0, 59.2% 27.8%, 85.4% 14.6%, 72.2% 40.8%, 100% 50%, 72.2% 59.2%, 85.4% 85.4%, 59.2% 72.2%, 50% 100%, 40.8% 72.2%, 14.6% 85.4%, 27.8% 59.2%, 0 50%, 27.8% 40.8%, 14.6% 14.6%, 40.8% 27.8%);
+}
+.torso .sl{left:6px; top:6px}
+.torso .sr{right:6px; top:6px}
+.knee{left:3px; top:19px; width:11px; height:11px}
+.tat-church{left:20px; top:12px; width:16px; height:25px}
+.tat-church .dome{left:3px; top:5px; width:10px; height:9px; border:1.5px solid var(--tat); border-radius:50% 50% 30% 30% / 70% 70% 30% 30%}
+.tat-church .dome::before{content:""; position:absolute; left:50%; top:-7px; width:1.5px; height:6px; margin-left:-.75px; background:var(--tat)}
+.tat-church .dome::after{content:""; position:absolute; left:50%; top:-5px; width:6px; height:1.5px; margin-left:-3px; background:var(--tat)}
+.tat-church .hall{left:1px; top:14px; width:14px; height:10px; border:1.5px solid var(--tat)}
+.tat-church .hall::after{content:""; position:absolute; left:50%; bottom:0; width:4px; height:5px; margin-left:-2px; border-radius:2px 2px 0 0; background:var(--tat)}
+.tat-text{left:0; right:0; top:41px; text-align:center; white-space:nowrap; font:13px/1 var(--font-tattoo); color:var(--tat); rotate:-4deg}
+.tat-wire{left:-1px; right:-1px; top:12px; height:6px; background:linear-gradient(var(--tat), var(--tat)) 0 50% / 100% 1.3px no-repeat, repeating-linear-gradient(90deg, transparent 0 2px, var(--tat) 2px 3px, transparent 3px 5px)}
+.suds{
+  left:31px; top:100px; width:42px; height:28px; transform-origin:50% 100%;
+  background:
+    radial-gradient(circle at 12px 14px, #fff 0 9px, rgba(255,255,255,0) 9.5px),
+    radial-gradient(circle at 24px 10px, #fff 0 11px, rgba(255,255,255,0) 11.5px),
+    radial-gradient(circle at 34px 16px, #f3f8fb 0 8px, rgba(255,255,255,0) 8.5px),
+    radial-gradient(circle at 18px 21px, #eef4f8 0 8px, rgba(255,255,255,0) 8.5px),
+    radial-gradient(circle at 30px 23px, #e9f1f6 0 6px, rgba(255,255,255,0) 6.5px);
+  filter:drop-shadow(0 1px 0 rgba(110,130,150,.55));
+  animation:fizz 1.6s ease-in-out infinite alternate;
+}
+@keyframes fizz{to{transform:scale(1.05, .97)}}
+.held{left:-6px; bottom:-16px; width:28px; height:17px; border-radius:36% / 46%; opacity:0; background:radial-gradient(130% 100% at 28% 22%, #fff 0 6%, var(--soap) 36%, var(--soap-deep) 100%)}
+.gold-held .held{background:radial-gradient(130% 100% at 28% 22%, #fffbe0 0 6%, var(--gold) 38%, var(--gold-deep) 100%)}
+
+.hero:not(.running) .torso, .figure .torso{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.025, 1.015)}}
+.hero.running .rig{rotate:7deg; animation:bob .34s linear infinite}
+.hero.running .leg-front{animation:stride .34s ease-in-out infinite}
+.hero.running .leg-back{animation:stride .34s ease-in-out -.17s infinite}
+.hero.running .arm-front{animation:swing .34s ease-in-out -.17s infinite}
+.hero.running .arm-back{animation:swing .34s ease-in-out infinite}
+@keyframes bob{0%,50%,100%{translate:0 0} 25%,75%{translate:0 -5px}}
+@keyframes stride{0%,100%{rotate:30deg} 50%{rotate:-30deg}}
+@keyframes swing{0%,100%{rotate:34deg} 50%{rotate:-34deg}}
+.hero.grab .arm-front{animation:grab .55s cubic-bezier(.3,.7,.4,1)}
+@keyframes grab{0%{rotate:10deg} 28%,70%{rotate:-165deg} 100%{rotate:10deg}}
+.hero.grab .held{animation:held .55s linear}
+@keyframes held{0%{opacity:0} 12%,72%{opacity:1} 100%{opacity:0}}
+.hero.grab .mouth{top:33px; height:5px; rotate:0deg; border-radius:1px 1px 6px 6px; background:#3a1a14; box-shadow:inset 3px 0 0 var(--gold)}
+.hero.oops .rig{animation:oops .5s ease-out}
+@keyframes oops{0%{rotate:0deg} 20%{rotate:-14deg} 45%{rotate:10deg} 70%{rotate:-5deg} 100%{rotate:0deg}}
+.hero.oops .brow{top:13px; rotate:-12deg}
+
+/* the same figure, posed for mugshots */
+.figure{position:absolute; width:100px; height:170px; pointer-events:none}
+.figure .rig{left:0}
+
 /* ---------- effects ---------- */
 .fx{position:absolute; inset:0; z-index:10; pointer-events:none; overflow:hidden}
 .pop-text{
@@ -256,6 +359,8 @@ button{font:inherit}
 .edge-flash.left{left:0; background:linear-gradient(90deg, rgba(220,45,35,.6), rgba(220,45,35,0))}
 .edge-flash.right{right:0; background:linear-gradient(270deg, rgba(220,45,35,.6), rgba(220,45,35,0))}
 @keyframes edge{from{opacity:1} to{opacity:0}}
+.target-ring{position:absolute; width:54px; height:20px; margin:-10px 0 0 -27px; border-radius:50%; border:3px solid rgba(255,255,255,.85); animation:target .45s ease-out forwards}
+@keyframes target{from{transform:scale(.3); opacity:1} to{transform:scale(1.2); opacity:0}}
 .banner{
   position:absolute; left:50%; top:40%; translate:-50% -50%; white-space:nowrap;
   font:clamp(30px, 9vw, 52px)/1 var(--font-display); color:var(--jumpsuit); text-transform:uppercase;
@@ -266,7 +371,7 @@ button{font:inherit}
 .world.shake{animation:shake .32s linear}
 @keyframes shake{0%,100%{transform:translate(0, 0)} 20%{transform:translate(-7px, 3px)} 40%{transform:translate(6px, -3px)} 60%{transform:translate(-4px, 2px)} 80%{transform:translate(3px, -1px)}}
 
-.stage.paused .sprite, .stage.paused .sprite *, .stage.paused .fx *{animation-play-state:paused!important}
+.stage.paused .sprite, .stage.paused .sprite *, .stage.paused .hero *, .stage.paused .fx *{animation-play-state:paused!important}
 
 /* ---------- HUD ---------- */
 .hud{
@@ -336,7 +441,10 @@ button{font:inherit}
 }
 .ht{position:absolute; right:10px; top:calc(var(--n) * 48px - 15px); font:700 11px/1 var(--font-type)}
 .eyebrow{margin:0; font:700 12px/1.25 var(--font-type); letter-spacing:.16em; text-transform:uppercase}
-.title{margin:8px 0 12px; font:clamp(38px, 11.5vw, 66px)/.92 var(--font-display); text-transform:uppercase; letter-spacing:.01em}
+.mug > p, .mug > h1{position:relative; z-index:1}
+.mug-start{padding-right:112px}
+.mug-start .figure{right:8px; bottom:-50px; scale:.92; transform-origin:100% 100%}
+.title{margin:8px 0 12px; font:clamp(34px, 10.5vw, 46px)/.92 var(--font-display); text-transform:uppercase; letter-spacing:.01em}
 .title span{display:inline-block; margin-top:6px; padding:5px .14em 1px; background:var(--jumpsuit); rotate:-2deg; box-shadow:0 3px 0 var(--ink)}
 .booking{display:inline-block; margin:0; padding:5px 8px; font:700 13px/1 var(--font-type); letter-spacing:.06em; color:var(--board-text); background:var(--board)}
 .sheet{display:grid; gap:14px; padding:18px 20px 20px}
@@ -362,7 +470,9 @@ button{font:inherit}
 .fine{font-size:13px; opacity:.82}
 @media (hover:none){ .kbd-hint{display:none} }
 
-.mug-report{padding:22px 56px 22px 20px}
+.mug-report{height:238px; padding:0}
+.mug-report .figure{left:44px; top:16px}
+.mug-report .letterboard{position:absolute; left:94px; top:106px; translate:-50% 0; min-width:150px}
 .letterboard{
   display:inline-grid; gap:5px; justify-items:center; padding:10px 18px 12px;
   color:var(--board-text); background-color:var(--board);
@@ -390,6 +500,7 @@ button{font:inherit}
   .stream, .splash, .steam i, .puddle, .sprite .trail, .gold .body::after{animation:none}
   .sprite:not(.caught):not(.squished) .body{animation:none}
   .world.shake{animation:none}
+  .hero.running .rig, .suds, .hero .torso, .figure .torso{animation:none}
   .card, .overlay{animation:none}
 }
 </style>
@@ -439,25 +550,26 @@ button{font:inherit}
 
   <section class="overlay" id="startScreen" aria-labelledby="gameTitle">
     <div class="card">
-      <div class="mug">
+      <div class="mug mug-start">
         <span class="ht" style="--n:1">7'0"</span>
         <span class="ht" style="--n:2">6'6"</span>
         <span class="ht" style="--n:3">6'0"</span>
         <span class="ht" style="--n:4">5'6"</span>
         <span class="ht" style="--n:5">5'0"</span>
-        <p class="eyebrow">Cell Block C · Shower duty</p>
+        <p class="eyebrow">Cell Block C · Showers</p>
         <h1 class="title" id="gameTitle">Zalupa <span>Warrior</span></h1>
         <p class="booking">Booking no. <span class="inmate">C-0000</span></p>
+        <div class="figure face-left" aria-hidden="true"></div>
       </div>
       <div class="sheet">
-        <p class="lede">The floor is wet and the soap won't stay put. Grab every bar before it slides out the other side.</p>
+        <p class="lede">The floor is wet and the soap won't stay put. Steer the Warrior into every bar before it slides out the other side.</p>
         <div class="rules-block">
           <h2 class="label">Shower rules</h2>
           <ol class="rules">
-            <li>Tap or click a bar of soap to pick it up.</li>
-            <li>Let three bars get away and your shift is over.</li>
+            <li><span>Move the mouse or drag your finger and he runs after it.<span class="kbd-hint"> Arrow keys work too.</span></span></li>
+            <li>Run into a bar of soap to pick it up. Let three get away and your shift is over.</li>
             <li>Gold soap is worth 5×. Catch streaks raise your multiplier.</li>
-            <li>Leave the roaches alone. Touching one costs a strike.</li>
+            <li>Don't step on the roaches. Squashing one costs a strike.</li>
           </ol>
         </div>
         <div class="actions">
@@ -490,6 +602,9 @@ button{font:inherit}
         <span class="ht" style="--n:1">7'0"</span>
         <span class="ht" style="--n:2">6'6"</span>
         <span class="ht" style="--n:3">6'0"</span>
+        <span class="ht" style="--n:4">5'6"</span>
+        <span class="ht" style="--n:5">5'0"</span>
+        <div class="figure" aria-hidden="true"></div>
         <div class="letterboard">
           <span>Block C</span>
           <strong id="overScore">0</strong>
@@ -694,7 +809,7 @@ button{font:inherit}
     const hit = Math.round(sw * 0.22);
     const boxW = sw + hit * 2, boxH = sw * 0.62 + hit * 2;
     const fromLeft = Math.random() < 0.5;
-    const yTop = H * 0.5, yBot = Math.max(yTop, H - boxH - 8);
+    const yTop = H * 0.55, yBot = Math.max(yTop, H - boxH - 8);
     const y0 = rand(yTop, yBot);
     const y1 = clamp(y0 + rand(-H * 0.12, H * 0.12), yTop, yBot);
     const xL = -boxW - 12, xR = W + 12;
@@ -731,6 +846,7 @@ button{font:inherit}
     }
     vars['--dur'] = dur.toFixed(2) + 's';
     for (const k in vars) el.style.setProperty(k, vars[k]);
+    el.style.zIndex = String(Math.round((y0 + y1) / 2 + boxH - hit));
 
     el.innerHTML = type === 'roach'
       ? '<div class="shadow"></div><div class="body"><div class="legs"></div><div class="shell"></div><div class="head"></div></div>'
@@ -754,35 +870,149 @@ button{font:inherit}
     sp.style.animation = 'none';
   }
 
-  /* ---------- scoring ---------- */
-  function onPointerDown(e) {
-    if (S.mode !== 'play') return;
-    const sp = e.target.closest('.sprite');
-    if (!sp || sp.dataset.done || sp.classList.contains('decor')) return;
-    e.preventDefault();
-    sp.dataset.done = '1';
-    const rect = stage.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
-    freeze(sp);
+  /* ---------- the warrior ---------- */
+  const FIGURE = '<div class="rig">' +
+    '<div class="limb arm arm-back"></div>' +
+    '<div class="limb leg leg-back"><i class="tat tat-star knee"></i></div>' +
+    '<div class="limb leg leg-front"><i class="tat tat-star knee"></i></div>' +
+    '<div class="neck"></div>' +
+    '<div class="torso"><i class="tat tat-star sl"></i><i class="tat tat-star sr"></i>' +
+      '<i class="tat tat-church"><b class="dome"></b><b class="hall"></b></i>' +
+      '<span class="tat tat-text">Zalupa</span></div>' +
+    '<div class="suds"></div>' +
+    '<div class="head"><i class="scar"></i><i class="brow"></i><i class="eye"></i><i class="tear"></i><i class="mouth"></i></div>' +
+    '<div class="ear"></div><div class="nose"></div>' +
+    '<div class="limb arm arm-front"><i class="tat tat-wire"></i><i class="held"></i></div>' +
+    '</div>';
 
-    if (sp.classList.contains('roach')) {
-      sp.classList.add('squished');
-      setTimeout(() => sp.remove(), 600);
-      popText('Gross!', x, y - 12, 'bad');
-      miss(null, y, true);
+  const heroEl = document.createElement('div');
+  heroEl.className = 'hero';
+  heroEl.innerHTML = '<div class="hero-shadow"></div>' + FIGURE;
+  spritesEl.appendChild(heroEl);
+  $$('.figure').forEach((f) => { f.innerHTML = FIGURE; });
+
+  const hero = { x: 0, y: 0, tx: 0, ty: 0, k: 1, face: 1, running: false, ready: false };
+  const reactTimers = {};
+  const keys = new Set();
+  let dragging = false;
+
+  function heroLimits() {
+    const W = stage.clientWidth, H = stage.clientHeight, half = 34 * hero.k;
+    return { minX: half + 4, maxX: Math.max(half + 4, W - half - 4), minY: H * 0.6, maxY: H - 8 };
+  }
+
+  function placeHero() {
+    heroEl.style.translate = `${hero.x.toFixed(1)}px ${hero.y.toFixed(1)}px`;
+    heroEl.style.zIndex = String(Math.round(hero.y));
+  }
+
+  function sizeHero() {
+    const W = stage.clientWidth, H = stage.clientHeight;
+    if (!W || !H) return false;
+    hero.k = clamp(Math.min(W, H) * 0.34, 118, 190) / 170;
+    heroEl.style.setProperty('--k', hero.k.toFixed(3));
+    if (!hero.ready) { hero.x = hero.tx = W * 0.5; hero.y = hero.ty = H * 0.82; hero.ready = true; }
+    const L = heroLimits();
+    hero.x = clamp(hero.x, L.minX, L.maxX);
+    hero.y = clamp(hero.y, L.minY, L.maxY);
+    placeHero();
+    return true;
+  }
+
+  function heroReact(cls, ms) {
+    restartAnim(heroEl, cls);
+    clearTimeout(reactTimers[cls]);
+    reactTimers[cls] = setTimeout(() => heroEl.classList.remove(cls), ms);
+  }
+
+  // Where every loose sprite is right now (CSS is moving them, so ask the layout).
+  function readSprites() {
+    const sr = stage.getBoundingClientRect();
+    const out = [];
+    for (const sp of spritesEl.querySelectorAll('.sprite:not([data-done])')) {
+      const b = sp.querySelector('.body');
+      if (!b) continue;
+      const r = b.getBoundingClientRect();
+      out.push({ el: sp, x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top, w: r.width, h: r.height });
+    }
+    return out;
+  }
+
+  function moveHero(dt, list) {
+    const attract = S.mode !== 'play';
+    if (!attract && keys.size) {
+      const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+      const dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
+      if (dx || dy) { const n = Math.hypot(dx, dy); hero.tx = hero.x + (dx / n) * 28; hero.ty = hero.y + (dy / n) * 28; }
+    } else if (attract) {
+      // Behind the menus he chases the demo soap on his own.
+      let best = null, bd = Infinity;
+      for (const sp of list) {
+        if (!sp.el.classList.contains('decor') || sp.x < 0 || sp.x > stage.clientWidth) continue;
+        const d = Math.hypot(sp.x - hero.x, sp.y - hero.y);
+        if (d < bd) { bd = d; best = sp; }
+      }
+      if (best) { hero.tx = best.x; hero.ty = best.y + 8 * hero.k; }
+    }
+    const L = heroLimits();
+    hero.tx = clamp(hero.tx, L.minX, L.maxX);
+    hero.ty = clamp(hero.ty, L.minY, L.maxY);
+    const dx = hero.tx - hero.x, dy = hero.ty - hero.y, dist = Math.hypot(dx, dy);
+    const speed = clamp(stage.clientWidth * 0.6 + 200, 420, 820) *
+      (attract ? 0.55 : 1 + Math.min(0.5, 0.04 * (S.level - 1)));
+    const step = speed * dt;
+    if (dist <= step) { hero.x = hero.tx; hero.y = hero.ty; }
+    else { hero.x += (dx / dist) * step; hero.y += (dy / dist) * step; }
+    if (Math.abs(dx) > 3) {
+      const face = dx > 0 ? 1 : -1;
+      if (face !== hero.face) { hero.face = face; heroEl.classList.toggle('face-left', face < 0); }
+    }
+    const running = dist > 3;
+    if (running !== hero.running) { hero.running = running; heroEl.classList.toggle('running', running); }
+    placeHero();
+  }
+
+  function checkPickups(list) {
+    const k = hero.k;
+    for (const sp of list) {
+      const decor = sp.el.classList.contains('decor');
+      if ((S.mode === 'play') === decor) continue;
+      const roach = sp.el.classList.contains('roach');
+      const reach = roach ? 20 * k + sp.w * 0.3 : 30 * k + sp.w * 0.35;
+      const top = hero.y - (roach ? 28 : 52) * k - sp.h * 0.3;
+      const bot = hero.y + (roach ? 14 : 22) * k + sp.h * 0.3;
+      if (Math.abs(sp.x - hero.x) < reach && sp.y > top && sp.y < bot) pickup(sp, decor, roach);
+    }
+  }
+
+  /* ---------- scoring ---------- */
+  function pickup(sp, decor, roach) {
+    const el = sp.el;
+    el.dataset.done = '1';
+    freeze(el);
+
+    if (roach) {
+      el.classList.add('squished');
+      setTimeout(() => el.remove(), 600);
+      popText('Gross!', sp.x, sp.y - 24, 'bad');
+      miss(null, sp.y, true);
       return;
     }
 
-    const gold = sp.classList.contains('gold');
-    sp.classList.add('caught');
-    setTimeout(() => sp.remove(), 420);
+    const gold = el.classList.contains('gold');
+    el.classList.add('caught');
+    setTimeout(() => el.remove(), 420);
+    heroEl.classList.toggle('gold-held', gold);
+    heroReact('grab', 560);
+    if (decor) return;
+
     S.combo++;
     S.caught++;
     S.bestCombo = Math.max(S.bestCombo, S.combo);
     const pts = (gold ? 50 : 10) * mult();
     S.score += pts;
-    popText('+' + pts, x, y - 12, gold ? 'gold' : '');
-    bubbles(x, y, gold ? 16 : 10);
+    popText('+' + pts, sp.x, sp.y - 20, gold ? 'gold' : '');
+    bubbles(sp.x, sp.y, gold ? 16 : 10);
     if (gold) sfx.gold(); else sfx.grab(S.combo);
 
     const lvl = 1 + Math.floor(S.caught / 5);
@@ -802,6 +1032,7 @@ button{font:inherit}
       popText('Got away!', side === 'left' ? 80 : W - 80, clamp(y, 90, H - 30), 'bad');
     }
     restartAnim(world, 'shake');
+    heroReact('oops', 520);
     if (roach) sfx.roach(); else sfx.miss();
     renderHUD();
     if (S.strikes >= MAX_STRIKES) gameOver();
@@ -813,8 +1044,13 @@ button{font:inherit}
   function startGame() {
     sfx.init();
     clearTimeout(overTimer);
-    spritesEl.replaceChildren();
+    spritesEl.querySelectorAll('.sprite').forEach((el) => el.remove());
     fx.replaceChildren();
+    keys.clear();
+    dragging = false;
+    hero.tx = hero.x;
+    hero.ty = hero.y;
+    heroEl.classList.remove('grab', 'oops');
     Object.assign(S, { score: 0, strikes: 0, combo: 0, bestCombo: 0, caught: 0, level: 1, spawnIn: 0.7, lastMult: 1 });
     stage.classList.remove('paused');
     setMode('play');
@@ -840,7 +1076,7 @@ button{font:inherit}
   function gameOver() {
     setMode('over');
     stage.classList.remove('paused');
-    for (const sp of spritesEl.children) { sp.dataset.done = '1'; sp.classList.add('gone'); }
+    for (const sp of spritesEl.querySelectorAll('.sprite')) { sp.dataset.done = '1'; sp.classList.add('gone'); }
 
     const record = S.score > 0 && S.score > S.best;
     if (record) { S.best = S.score; store.set('best', S.best); }
@@ -866,11 +1102,16 @@ button{font:inherit}
     }, 750);
   }
 
-  /* ---------- main loop: only decides when to spawn ---------- */
+  /* ---------- main loop: moves the warrior, checks pickups, decides when to spawn ---------- */
   let last = 0;
   function tick(now) {
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
+    if (S.mode !== 'pause' && (hero.ready || sizeHero())) {
+      const list = readSprites();
+      moveHero(dt, list);
+      checkPickups(list);
+    }
     if (S.mode === 'play') {
       S.spawnIn -= dt;
       if (S.spawnIn <= 0) {
@@ -881,7 +1122,7 @@ button{font:inherit}
     } else if ((S.mode === 'menu' || S.mode === 'over') && !reduceMotion.matches) {
       S.attractIn -= dt;
       if (S.attractIn <= 0) {
-        if (spritesEl.childElementCount < 3) spawn(true);
+        if (spritesEl.querySelectorAll('.sprite').length < 3) spawn(true);
         S.attractIn = rand(1.6, 3.2);
       }
     }
@@ -889,7 +1130,38 @@ button{font:inherit}
   }
 
   /* ---------- input ---------- */
-  stage.addEventListener('pointerdown', onPointerDown);
+  const MOVE_KEYS = {
+    ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right',
+    ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down',
+  };
+  function aimAt(e) {
+    const r = stage.getBoundingClientRect();
+    const L = heroLimits();
+    hero.tx = clamp(e.clientX - r.left, L.minX, L.maxX);
+    hero.ty = clamp(e.clientY - r.top, L.minY, L.maxY);
+  }
+  function marker(x, y) {
+    const el = document.createElement('div');
+    el.className = 'target-ring';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.addEventListener('animationend', () => el.remove());
+    fx.appendChild(el);
+  }
+  stage.addEventListener('pointerdown', (e) => {
+    if (S.mode !== 'play' || e.target.closest('.hud-group')) return;
+    e.preventDefault();
+    dragging = true;
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    aimAt(e);
+    marker(hero.tx, hero.ty);
+  });
+  stage.addEventListener('pointermove', (e) => {
+    if (S.mode === 'play' && (dragging || e.pointerType === 'mouse')) aimAt(e);
+  });
+  stage.addEventListener('pointerup', () => { dragging = false; });
+  stage.addEventListener('pointercancel', () => { dragging = false; });
+  document.addEventListener('keyup', (e) => { const dir = MOVE_KEYS[e.key]; if (dir) keys.delete(dir); });
   stage.addEventListener('contextmenu', (e) => { if (e.target.closest('.world')) e.preventDefault(); });
   $('#startBtn').addEventListener('click', startGame);
   $('#againBtn').addEventListener('click', startGame);
@@ -906,6 +1178,11 @@ button{font:inherit}
     if (!S.muted) sfx.grab(1);
   });
   document.addEventListener('keydown', (e) => {
+    const dir = MOVE_KEYS[e.key];
+    if (dir) {
+      if (S.mode === 'play') { e.preventDefault(); keys.add(dir); }
+      return;
+    }
     if (e.repeat) return;
     const k = e.key;
     if (k === 'Escape' || k === 'p' || k === 'P') {
@@ -921,7 +1198,8 @@ button{font:inherit}
     }
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
-  window.addEventListener('blur', pause);
+  window.addEventListener('blur', () => { keys.clear(); dragging = false; pause(); });
+  window.addEventListener('resize', sizeHero);
 
   /* ---------- boot ---------- */
   let running = false;
@@ -933,6 +1211,7 @@ button{font:inherit}
     renderBest();
     renderSound();
     renderHUD();
+    sizeHero();
     setMode('menu');
     show('start', false);
     if (!running) {
