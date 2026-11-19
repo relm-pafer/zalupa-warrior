@@ -332,6 +332,41 @@ button{font:inherit}
 .hero.oops .rig{animation:oops .5s ease-out}
 @keyframes oops{0%{rotate:0deg} 20%{rotate:-14deg} 45%{rotate:10deg} 70%{rotate:-5deg} 100%{rotate:0deg}}
 .hero.oops .brow{top:13px; rotate:-12deg}
+.mouth{z-index:1}
+
+/* ---------- three inmates, one body: Zen (hardhat), Riki (long hair), Koska (lipstick) ---------- */
+.rig .hardhat, .rig .hair-back, .rig .hair-top{display:none}
+.v-zen .rig .hardhat, .v-riki .rig .hair-back, .v-riki .rig .hair-top{display:block}
+.v-riki .rig .ear{display:none}
+.hardhat{
+  left:25px; top:-9px; width:52px; height:24px;
+  border-radius:52% 56% 10% 10% / 100% 100% 12% 12%;
+  background:
+    radial-gradient(ellipse 40% 50% at 40% 25%, rgba(255,246,190,.9), rgba(255,246,190,0)),
+    linear-gradient(180deg, #ffd23f, #f0a500);
+  box-shadow:inset 0 -3px 0 rgba(150,90,0,.4);
+}
+.hardhat::before{content:""; position:absolute; left:calc(50% - 4px); top:1px; width:8px; height:20px; border-radius:4px 4px 0 0; background:linear-gradient(90deg, rgba(150,90,0,.25), rgba(255,255,255,.4) 50%, rgba(150,90,0,.25))}
+.hardhat::after{content:""; position:absolute; left:-4px; right:-10px; bottom:-4px; height:6px; border-radius:3px 6px 3px 3px; background:linear-gradient(180deg, #f6b800, #d48f00); box-shadow:0 2px 2px rgba(0,0,0,.25)}
+.hair-back{
+  left:18px; top:4px; width:30px; height:90px; transform-origin:70% 5%;
+  border-radius:18px 10px 12px 16px / 22px 14px 30px 26px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 1px, rgba(0,0,0,0) 1px 5px),
+    linear-gradient(90deg, #2b1d15, #4b3324 45%, #3a281c 80%, #2b1d15);
+  clip-path:polygon(0 0, 100% 0, 100% 88%, 85% 100%, 70% 90%, 55% 100%, 40% 91%, 25% 100%, 10% 92%, 0 98%);
+}
+.hair-top{
+  left:27px; top:-4px; width:47px; height:18px;
+  border-radius:55% 60% 18% 45% / 85% 90% 25% 40%;
+  background:
+    radial-gradient(ellipse 30% 40% at 55% 30%, rgba(255,230,200,.28), rgba(255,230,200,0)),
+    linear-gradient(100deg, #2b1d15, #4b3324 40%, #5a3d2a 60%, #3a281c);
+}
+.hero.running .hair-back{animation:sway .34s ease-in-out infinite}
+@keyframes sway{0%,100%{rotate:5deg} 50%{rotate:-5deg}}
+.v-koska .mouth{left:24px; top:34px; width:11px; height:5px; rotate:-4deg; border-radius:45% 45% 50% 50% / 40% 40% 60% 60%; background:linear-gradient(180deg, #c8102e 0 42%, #6e0a1a 42% 56%, #e2345a 56%)}
+.hero.grab.v-koska .mouth{top:33px; height:6px; background:#3a1a14; box-shadow:inset 0 0 0 1.6px #d1153a, inset 4px 0 0 var(--gold)}
 
 /* the same figure, posed for mugshots */
 .figure{position:absolute; width:100px; height:170px; pointer-events:none}
@@ -442,9 +477,21 @@ button{font:inherit}
 .ht{position:absolute; right:10px; top:calc(var(--n) * 48px - 15px); font:700 11px/1 var(--font-type)}
 .eyebrow{margin:0; font:700 12px/1.25 var(--font-type); letter-spacing:.16em; text-transform:uppercase}
 .mug > p, .mug > h1{position:relative; z-index:1}
-.mug-start{padding-right:112px}
-.mug-start .figure{right:8px; bottom:-50px; scale:.92; transform-origin:100% 100%}
-.title{margin:8px 0 12px; font:clamp(34px, 10.5vw, 46px)/.92 var(--font-display); text-transform:uppercase; letter-spacing:.01em}
+.lineup-block{position:relative; z-index:1; display:grid; gap:8px; margin:16px -40px 0 0}
+.lineup-label{margin:0; font:700 11px/1.2 var(--font-type); letter-spacing:.16em; text-transform:uppercase}
+.lineup{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px}
+.suspect{display:grid; padding:0; border:0; border-radius:6px; background:none; color:var(--ink); cursor:pointer; touch-action:manipulation; text-align:center}
+.suspect:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.suspect-fig{position:relative; display:block; height:100px; overflow:hidden; border-radius:6px 6px 0 0}
+.suspect-fig .figure{left:50%; top:10px; translate:-50% 0; scale:.8; transform-origin:50% 0}
+.suspect-tag{display:block; padding:6px 4px 5px; border-radius:4px; font:15px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--board-text); background:var(--board)}
+.suspect[aria-checked="true"] .suspect-fig{background:radial-gradient(ellipse 70% 90% at 50% 0%, rgba(255,250,225,.95), rgba(255,250,225,0))}
+.suspect[aria-checked="true"] .suspect-fig .figure{animation:hop .35s ease-out}
+.suspect[aria-checked="true"] .suspect-tag{color:var(--ink); background:var(--jumpsuit)}
+.suspect[aria-checked="false"] .suspect-fig .figure{opacity:.55; filter:grayscale(.75)}
+.suspect[aria-checked="false"]:hover .suspect-fig .figure{opacity:.8}
+@keyframes hop{0%,100%{translate:-50% 0} 40%{translate:-50% -8px}}
+.title{margin:8px 0 0; font:clamp(36px, 11vw, 60px)/.92 var(--font-display); text-transform:uppercase; letter-spacing:.01em}
 .title span{display:inline-block; margin-top:6px; padding:5px .14em 1px; background:var(--jumpsuit); rotate:-2deg; box-shadow:0 3px 0 var(--ink)}
 .booking{display:inline-block; margin:0; padding:5px 8px; font:700 13px/1 var(--font-type); letter-spacing:.06em; color:var(--board-text); background:var(--board)}
 .sheet{display:grid; gap:14px; padding:18px 20px 20px}
@@ -500,7 +547,7 @@ button{font:inherit}
   .stream, .splash, .steam i, .puddle, .sprite .trail, .gold .body::after{animation:none}
   .sprite:not(.caught):not(.squished) .body{animation:none}
   .world.shake{animation:none}
-  .hero.running .rig, .suds, .hero .torso, .figure .torso{animation:none}
+  .hero.running .rig, .suds, .hero .torso, .figure .torso, .hero.running .hair-back, .suspect-fig .figure{animation:none!important}
   .card, .overlay{animation:none}
 }
 </style>
@@ -556,13 +603,19 @@ button{font:inherit}
         <span class="ht" style="--n:3">6'0"</span>
         <span class="ht" style="--n:4">5'6"</span>
         <span class="ht" style="--n:5">5'0"</span>
+        <span class="ht" style="--n:6">4'6"</span>
         <p class="eyebrow">Cell Block C · Showers</p>
         <h1 class="title" id="gameTitle">Zalupa <span>Warrior</span></h1>
-        <p class="booking">Booking no. <span class="inmate">C-0000</span></p>
-        <div class="figure face-left" aria-hidden="true"></div>
+        <div class="lineup-block">
+          <p class="lineup-label" id="lineupLabel">Line-up · pick your inmate</p>
+          <div class="lineup" id="lineup" role="radiogroup" aria-labelledby="lineupLabel">
+            <button class="suspect" type="button" role="radio" aria-checked="true" data-char="zen"><span class="suspect-fig"><span class="figure v-zen" aria-hidden="true"></span></span><span class="suspect-tag">Zen</span></button>
+            <button class="suspect" type="button" role="radio" aria-checked="false" tabindex="-1" data-char="riki"><span class="suspect-fig"><span class="figure v-riki" aria-hidden="true"></span></span><span class="suspect-tag">Riki</span></button>
+            <button class="suspect" type="button" role="radio" aria-checked="false" tabindex="-1" data-char="koska"><span class="suspect-fig"><span class="figure v-koska face-left" aria-hidden="true"></span></span><span class="suspect-tag">Koska</span></button>
+          </div>
+        </div>
       </div>
       <div class="sheet">
-        <p class="lede">The floor is wet and the soap won't stay put. Steer the Warrior into every bar before it slides out the other side.</p>
         <div class="rules-block">
           <h2 class="label">Shower rules</h2>
           <ol class="rules">
@@ -604,9 +657,9 @@ button{font:inherit}
         <span class="ht" style="--n:3">6'0"</span>
         <span class="ht" style="--n:4">5'6"</span>
         <span class="ht" style="--n:5">5'0"</span>
-        <div class="figure" aria-hidden="true"></div>
+        <div class="figure v-zen" id="overFigure" aria-hidden="true"></div>
         <div class="letterboard">
-          <span>Block C</span>
+          <span id="overName">Zen · Block C</span>
           <strong id="overScore">0</strong>
           <span class="inmate">C-0000</span>
         </div>
@@ -623,6 +676,7 @@ button{font:inherit}
         </dl>
         <div class="actions">
           <button class="btn primary" id="againBtn" type="button">Back to the showers</button>
+          <button class="btn ghost" id="menuBtn" type="button">Change inmate</button>
         </div>
       </div>
     </div>
@@ -651,6 +705,12 @@ button{font:inherit}
     [2200, 'Zalupa Warrior'],
   ];
 
+  const CHARS = {
+    zen: { name: 'Zen' },
+    riki: { name: 'Riki' },
+    koska: { name: 'Koska' },
+  };
+
   const store = {
     get(k, d) { try { const v = localStorage.getItem('zw:' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
     set(k, v) { try { localStorage.setItem('zw:' + k, JSON.stringify(v)); } catch (_) {} },
@@ -662,7 +722,9 @@ button{font:inherit}
     best: Number(store.get('best', 0)) || 0,
     muted: store.get('muted', false) === true,
     inmate: 'C-' + (1000 + Math.floor(Math.random() * 9000)),
+    char: store.get('char', 'zen'),
   };
+  if (!CHARS[S.char]) S.char = 'zen';
 
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -871,25 +933,50 @@ button{font:inherit}
   }
 
   /* ---------- the warrior ---------- */
-  const FIGURE = '<div class="rig">' +
-    '<div class="limb arm arm-back"></div>' +
-    '<div class="limb leg leg-back"><i class="tat tat-star knee"></i></div>' +
-    '<div class="limb leg leg-front"><i class="tat tat-star knee"></i></div>' +
-    '<div class="neck"></div>' +
-    '<div class="torso"><i class="tat tat-star sl"></i><i class="tat tat-star sr"></i>' +
+  // One body for every inmate; the v-zen / v-riki / v-koska class on the wrapper picks the look.
+  const FIGURE = '<span class="rig">' +
+    '<span class="limb arm arm-back"></span>' +
+    '<span class="limb leg leg-back"><i class="tat tat-star knee"></i></span>' +
+    '<span class="limb leg leg-front"><i class="tat tat-star knee"></i></span>' +
+    '<span class="neck"></span>' +
+    '<span class="torso"><i class="tat tat-star sl"></i><i class="tat tat-star sr"></i>' +
       '<i class="tat tat-church"><b class="dome"></b><b class="hall"></b></i>' +
-      '<span class="tat tat-text">Zalupa</span></div>' +
-    '<div class="suds"></div>' +
-    '<div class="head"><i class="scar"></i><i class="brow"></i><i class="eye"></i><i class="tear"></i><i class="mouth"></i></div>' +
-    '<div class="ear"></div><div class="nose"></div>' +
-    '<div class="limb arm arm-front"><i class="tat tat-wire"></i><i class="held"></i></div>' +
-    '</div>';
+      '<span class="tat tat-text">Zalupa</span></span>' +
+    '<span class="suds"></span>' +
+    '<span class="hair-back"></span>' +
+    '<span class="head"><i class="scar"></i><i class="brow"></i><i class="eye"></i><i class="tear"></i><i class="mouth"></i></span>' +
+    '<span class="ear"></span><span class="nose"></span>' +
+    '<span class="hair-top"></span><span class="hardhat"></span>' +
+    '<span class="limb arm arm-front"><i class="tat tat-wire"></i><i class="held"></i></span>' +
+    '</span>';
 
   const heroEl = document.createElement('div');
   heroEl.className = 'hero';
   heroEl.innerHTML = '<div class="hero-shadow"></div>' + FIGURE;
   spritesEl.appendChild(heroEl);
   $$('.figure').forEach((f) => { f.innerHTML = FIGURE; });
+  const overFigure = $('#overFigure');
+
+  function applyChar() {
+    for (const el of [heroEl, overFigure]) {
+      for (const id in CHARS) el.classList.toggle('v-' + id, id === S.char);
+    }
+    $$('.suspect').forEach((b) => {
+      const on = b.dataset.char === S.char;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    $('#overName').textContent = CHARS[S.char].name + ' · Block C';
+  }
+
+  function pickChar(id) {
+    if (!CHARS[id] || id === S.char) return;
+    S.char = id;
+    store.set('char', id);
+    applyChar();
+    sfx.init();
+    sfx.grab(4);
+  }
 
   const hero = { x: 0, y: 0, tx: 0, ty: 0, k: 1, face: 1, running: false, ready: false };
   const reactTimers = {};
@@ -1165,6 +1252,13 @@ button{font:inherit}
   stage.addEventListener('contextmenu', (e) => { if (e.target.closest('.world')) e.preventDefault(); });
   $('#startBtn').addEventListener('click', startGame);
   $('#againBtn').addEventListener('click', startGame);
+  $('#menuBtn').addEventListener('click', () => {
+    if (S.mode !== 'over') return;
+    setMode('menu');
+    show('start', false);
+    const picked = $(`.suspect[data-char="${S.char}"]`);
+    if (picked) picked.focus({ preventScroll: true });
+  });
   $('#pauseBtn').addEventListener('click', pause);
   $('#resumeBtn').addEventListener('click', resume);
   $('#endBtn').addEventListener('click', () => { if (S.mode === 'pause') gameOver(); });
@@ -1177,7 +1271,22 @@ button{font:inherit}
     renderSound();
     if (!S.muted) sfx.grab(1);
   });
+  $('#lineup').addEventListener('click', (e) => {
+    const b = e.target.closest('.suspect');
+    if (b) pickChar(b.dataset.char);
+  });
   document.addEventListener('keydown', (e) => {
+    const focused = document.activeElement;
+    if (focused && focused.classList && focused.classList.contains('suspect') &&
+        ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      e.preventDefault();
+      const ids = Object.keys(CHARS);
+      const back = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
+      const next = ids[(ids.indexOf(S.char) + (back ? ids.length - 1 : 1)) % ids.length];
+      pickChar(next);
+      $(`.suspect[data-char="${next}"]`).focus();
+      return;
+    }
     const dir = MOVE_KEYS[e.key];
     if (dir) {
       if (S.mode === 'play') { e.preventDefault(); keys.add(dir); }
@@ -1207,6 +1316,8 @@ button{font:inherit}
     data = data || {};
     if (typeof data.best === 'number' && data.best > S.best) S.best = data.best;
     if (typeof data.muted === 'boolean') S.muted = data.muted;
+    if (CHARS[data.char]) S.char = data.char;
+    applyChar();
     $$('.inmate').forEach((el) => { el.textContent = S.inmate; });
     renderBest();
     renderSound();
@@ -1222,7 +1333,7 @@ button{font:inherit}
 
   const hot = window.claude && window.claude.hot;
   if (hot && typeof hot.snapshot === 'function') {
-    try { hot.snapshot(() => ({ best: S.best, muted: S.muted })); } catch (_) {}
+    try { hot.snapshot(() => ({ best: S.best, muted: S.muted, char: S.char })); } catch (_) {}
   }
   if (hot && typeof hot.ready === 'function') hot.ready(boot);
   else boot((hot && hot.data) || {});
