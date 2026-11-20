@@ -1,0 +1,1322 @@
+From f56f5c2a008689b6f354107543d2f5abd733d13d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 20 Nov 2026 23:25:31 +0000
+Subject: [PATCH] Add a shared leaderboard and photo faces
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Leaderboard
+- api/scores.js: Vercel function backed by Upstash Redis (REST, no npm
+  packages). GET returns the top names per board (all, zen, riki, koska)
+  and where a given name stands; POST saves a finished shift.
+- Each name is ranked by its best shift; every run is also logged.
+- Scores are checked for plausibility against bars caught, and saves are
+  limited to 20 per minute per address.
+- Shift report asks for a name once, then saves every shift with points
+  automatically, and shows the top five. New leaderboard screen with a
+  tab per inmate. Scores that can't be sent wait on the device and go out
+  on the next visit. With no API or database the leaderboard stays hidden.
+
+Photo faces
+- Zen, Riki, Koska and Mällu get bobblehead photo faces (faces/*.webp),
+  with body skin tinted to match. Heads bob while running, swell on a
+  catch and flash red on a hit.
+
+README covers turning the leaderboard on in Vercel (Upstash for Redis).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EmFDWuoQHVEjPstnpy7iZ6
+---
+ .gitignore       |   1 +
+ README.md        |  41 ++++-
+ api/scores.js    | 164 ++++++++++++++++++
+ faces/koska.webp | Bin 0 -> 3658 bytes
+ faces/mallu.webp | Bin 0 -> 7282 bytes
+ faces/riki.webp  | Bin 0 -> 4968 bytes
+ faces/zen.webp   | Bin 0 -> 6978 bytes
+ index.html       | 434 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 8 files changed, 633 insertions(+), 7 deletions(-)
+ create mode 100644 api/scores.js
+ create mode 100644 faces/koska.webp
+ create mode 100644 faces/mallu.webp
+ create mode 100644 faces/riki.webp
+ create mode 100644 faces/zen.webp
+
+diff --git a/.gitignore b/.gitignore
+index e831c3b..71beb16 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,4 @@
+ .vercel
+ .DS_Store
+ node_modules
++.env*.local
+diff --git a/README.md b/README.md
+index 86fbecf..a551cde 100644
+--- a/README.md
++++ b/README.md
+@@ -2,7 +2,7 @@
+ 
+ A browser game set in the Cell Block C showers. Pick your inmate (Zen, Riki or Koska), then steer him around the wet floor and grab every bar of soap before it slides out the other side.
+ 
+-It's one HTML file with its own CSS and JavaScript. There is no build step and nothing to install.
++The game is one HTML file with its own CSS and JavaScript. The shared leaderboard adds one small serverless function. There is no build step and nothing to install.
+ 
+ ![Zalupa Warrior share image](og-image.png)
+ 
+@@ -28,6 +28,41 @@ At level 5 Mällu sneaks into the showers, and he comes back every 5 levels afte
+ 
+ Your personal best and chosen inmate are saved in the browser's local storage.
+ 
++### Photo faces
++
++Zen, Riki, Koska and Mällu wear bobblehead photo faces from `faces/`, and their bodies are tinted to match. To swap a face, replace the file with a cut-out framed the same way: a 160×184 WebP with a transparent background, eyes level at y 104 and 40 px apart. The `face` and `skin` settings live in `CHARS` (inmates) and `MALLU_LOOK` (the boss) in `index.html`. Remove `face` and that character goes back to the drawn face.
++
++## Leaderboard
++
++Everyone who plays the deployed game shares one leaderboard.
++
++- The first time a shift ends with points, the shift report asks for a name. After that, every shift with points is saved under that name automatically.
++- Each name is ranked by its best shift. The **Leaderboard** button on the start screen shows the full board, with tabs for all inmates or just Zen, Riki or Koska.
++- The shift report shows the top five and where you placed. Use **Not you?** there, or the name field on the leaderboard screen, when someone else plays on the same device.
++- Every run is also kept in a log (the newest 5,000), not just the best ones.
++- If the leaderboard can't be reached, the score is kept on the device and sent the next time the game opens.
++
++The API checks that a score is possible for the number of bars caught and allows 20 saves per minute from one address. Anyone with browser dev tools could still submit a fake score, so treat the board as a friendly one.
++
++### Turn it on in Vercel
++
++The scores live in a free Upstash Redis database that you add through Vercel. Until it's connected, the game works as before and the leaderboard stays hidden.
++
++1. Open the project in Vercel and go to **Storage** (or **Integrations → Browse Marketplace**). Create an **Upstash for Redis** database on the free plan and pick a region near you.
++2. Connect the database to this project for Production, Preview and Development. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` to the project's environment variables.
++3. Redeploy: open **Deployments**, choose the latest one and click **Redeploy**, or push a commit. Deployments made before the database was connected don't get the new variables.
++
++Open the game and the **Leaderboard** button appears on the start screen.
++
++To test the function locally with the real database, run `npx vercel env pull .env.local` and then `npx vercel dev`.
++
++### API
++
++| Request | What it does |
++| --- | --- |
++| `GET /api/scores?board=all&limit=10&me=Riki` | Top names on a board (`all`, `zen`, `riki` or `koska`), plus where `me` stands |
++| `POST /api/scores` with `{ "name", "char", "score", "caught" }` | Saves a finished shift and returns its rank |
++
+ ## Run it locally
+ 
+ Open `index.html` in a browser, or serve the folder:
+@@ -36,6 +71,8 @@ Open `index.html` in a browser, or serve the folder:
+ npx serve .
+ ```
+ 
++Served this way the leaderboard stays hidden, because there is no API. Use `npx vercel dev` to run the game together with the function.
++
+ ## Deploy to Vercel
+ 
+ 1. In Vercel, choose **Add New → Project** and import this GitHub repository.
+@@ -55,6 +92,8 @@ npx vercel --prod
+ | File | Purpose |
+ | --- | --- |
+ | `index.html` | The whole game: markup, styles and script |
++| `api/scores.js` | Leaderboard API: saves shifts and serves the rankings from Upstash Redis |
++| `faces/` | Photo faces for the inmates |
+ | `favicon.svg` | Browser tab icon |
+ | `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` | Home-screen icons for iPhone and Android |
+ | `site.webmanifest` | Lets phones add the game to the home screen as a full-screen app |
+diff --git a/api/scores.js b/api/scores.js
+new file mode 100644
+index 0000000..9b618a6
+--- /dev/null
++++ b/api/scores.js
+@@ -0,0 +1,164 @@
++// Shared leaderboard for Zalupa Warrior.
++//
++//   GET  /api/scores?board=all|zen|riki|koska&limit=10&me=Name
++//        Top players on a board, one row per name (their best run), plus where "me" stands.
++//   POST /api/scores  { name, char, score, caught }
++//        Saves a finished shift. Every run goes into a log; a player's best per board is ranked.
++//
++// Storage is Upstash Redis, spoken to over its REST API so no npm packages are needed.
++// Connecting an "Upstash for Redis" database to the Vercel project sets KV_REST_API_URL and
++// KV_REST_API_TOKEN. UPSTASH_REDIS_REST_URL/_TOKEN, or either pair behind a custom prefix, also works.
++
++const CHARS = ['zen', 'riki', 'koska'];
++const BOARDS = ['all', ...CHARS];
++const K = {
++  best: (board) => 'zw:best:' + board, // sorted set: player key -> best score
++  run: (board) => 'zw:run:' + board,   // hash: player key -> JSON of that best run
++  runs: 'zw:runs',                     // list: every run, newest first
++  count: 'zw:runs:count',
++  rate: (ip) => 'zw:rl:' + ip,
++};
++const RUNS_KEPT = 5000;
++const RATE_LIMIT = 20; // saves per IP per minute
++const NAME_MAX = 16;
++
++function credentials() {
++  const e = process.env;
++  if (e.KV_REST_API_URL && e.KV_REST_API_TOKEN) return [e.KV_REST_API_URL, e.KV_REST_API_TOKEN];
++  if (e.UPSTASH_REDIS_REST_URL && e.UPSTASH_REDIS_REST_TOKEN) return [e.UPSTASH_REDIS_REST_URL, e.UPSTASH_REDIS_REST_TOKEN];
++  // Connected with a custom prefix, e.g. DB1_KV_REST_API_URL or DB1_UPSTASH_REDIS_REST_URL.
++  for (const k of Object.keys(e)) {
++    if (!/_REST(_API)?_URL$/.test(k)) continue;
++    const token = e[k.slice(0, -3) + 'TOKEN'];
++    if (e[k] && token) return [e[k], token];
++  }
++  return null;
++}
++
++class HttpError extends Error {
++  constructor(status, code) { super(code); this.status = status; this.code = code; }
++}
++
++// Runs commands in one round trip; returns their results in order.
++async function redis(commands) {
++  const creds = credentials();
++  if (!creds) throw new HttpError(503, 'not_configured');
++  const [url, token] = creds;
++  const res = await fetch(url.replace(/\/+$/, '') + '/pipeline', {
++    method: 'POST',
++    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
++    body: JSON.stringify(commands),
++  });
++  if (!res.ok) throw new Error('redis http ' + res.status);
++  return (await res.json()).map((r) => {
++    if (r.error) throw new Error('redis: ' + r.error);
++    return r.result;
++  });
++}
++
++const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
++  status,
++  headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers },
++});
++
++async function guard(fn) {
++  try {
++    return await fn();
++  } catch (err) {
++    if (err instanceof HttpError) return json({ error: err.code }, err.status);
++    console.error(err);
++    return json({ error: 'storage_error' }, 502);
++  }
++}
++
++// Letters, digits, spaces and punctuation from any language; control characters and runs of spaces go.
++function cleanName(v) {
++  if (typeof v !== 'string') return '';
++  const s = v.normalize('NFC').replace(/\p{C}/gu, '').replace(/\s+/g, ' ').trim();
++  return Array.from(s).slice(0, NAME_MAX).join('').trim();
++}
++const playerKey = (name) => name.toLowerCase();
++
++const intIn = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
++
++// Every bar is worth 10 or 50 points times a multiplier of at most 5, and driving Mällu off
++// pays 500 × visit number. He shows up after 20 bars at the earliest, then at most every 20 more.
++function plausible(score, caught) {
++  if (score % 10 !== 0) return false;
++  const visits = Math.floor(caught / 20);
++  return score <= caught * 250 + 250 * visits * (visits + 1);
++}
++
++function parse(s) {
++  try { return s ? JSON.parse(s) : null; } catch { return null; }
++}
++
++function row(key, score, rank, meta) {
++  const m = parse(meta) || {};
++  return { rank, name: m.name || key, char: CHARS.includes(m.char) ? m.char : null, score, caught: m.caught ?? null, at: m.at ?? null };
++}
++
++async function readBoard(board, limit, meKey) {
++  const zset = K.best(board);
++  const cmds = [['ZREVRANGE', zset, 0, limit - 1, 'WITHSCORES'], ['ZCARD', zset]];
++  if (meKey) cmds.push(['ZREVRANK', zset, meKey], ['ZSCORE', zset, meKey]);
++  const [flat, players, meRank = null, meScore = null] = await redis(cmds);
++
++  const keys = [], scores = [];
++  for (let i = 0; i < flat.length; i += 2) { keys.push(flat[i]); scores.push(Number(flat[i + 1])); }
++  const meOutside = meKey && meRank !== null && meRank >= keys.length;
++  const metaKeys = meOutside ? [...keys, meKey] : keys;
++  const metas = metaKeys.length ? (await redis([['HMGET', K.run(board), ...metaKeys]]))[0] : [];
++
++  const entries = keys.map((k, i) => row(k, scores[i], i + 1, metas[i]));
++  let me = null;
++  if (meRank !== null) me = meOutside ? row(meKey, Number(meScore), meRank + 1, metas[metas.length - 1]) : entries[meRank];
++  return { board, players, entries, me };
++}
++
++export function GET(request) {
++  return guard(async () => {
++    const q = new URL(request.url).searchParams;
++    const board = BOARDS.includes(q.get('board')) ? q.get('board') : 'all';
++    const limit = Math.min(50, Math.max(1, parseInt(q.get('limit'), 10) || 10));
++    const me = cleanName(q.get('me') || '');
++    return json(await readBoard(board, limit, me ? playerKey(me) : null));
++  });
++}
++
++export function POST(request) {
++  return guard(async () => {
++    let body;
++    try { body = await request.json(); } catch { return json({ error: 'bad_json' }, 400); }
++    const { char, score, caught } = body || {};
++    const name = cleanName(body && body.name);
++    if (!name) return json({ error: 'name_required' }, 400);
++    if (!CHARS.includes(char)) return json({ error: 'bad_char' }, 400);
++    if (!intIn(score, 1, 10_000_000) || !intIn(caught, 0, 100_000) || !plausible(score, caught)) {
++      return json({ error: 'bad_score' }, 400);
++    }
++
++    const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || request.headers.get('x-real-ip') || 'unknown';
++    const [, hits] = await redis([['SET', K.rate(ip), 0, 'EX', 60, 'NX'], ['INCR', K.rate(ip)]]);
++    if (hits > RATE_LIMIT) return json({ error: 'slow_down' }, 429, { 'Retry-After': '60' });
++
++    const key = playerKey(name);
++    const run = JSON.stringify({ name, char, score, caught, at: Date.now() });
++    // ZADD GT CH answers 1 only when this run beats the player's stored best (or is their first).
++    const [bestAll, bestChar] = await redis([
++      ['ZADD', K.best('all'), 'GT', 'CH', score, key],
++      ['ZADD', K.best(char), 'GT', 'CH', score, key],
++      ['LPUSH', K.runs, run],
++      ['LTRIM', K.runs, 0, RUNS_KEPT - 1],
++      ['INCR', K.count],
++    ]);
++    const cmds = [];
++    if (bestAll) cmds.push(['HSET', K.run('all'), key, run]);
++    if (bestChar) cmds.push(['HSET', K.run(char), key, run]);
++    cmds.push(['ZREVRANK', K.best('all'), key], ['ZREVRANK', K.best(char), key]);
++    const out = await redis(cmds);
++    const [rankAll, rankChar] = out.slice(-2);
++
++    return json({ ok: true, name, newBest: bestAll === 1, newCharBest: bestChar === 1, rank: rankAll + 1, charRank: rankChar + 1 });
++  });
++}
+diff --git a/faces/koska.webp b/faces/koska.webp
+new file mode 100644
+index 0000000000000000000000000000000000000000..db42010f68cf825aabfbe8052c80efac6533c6ea
+GIT binary patch
+literal 3658
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/faces/mallu.webp b/faces/mallu.webp
+new file mode 100644
+index 0000000000000000000000000000000000000000..6f8123e9b891ac45a7de375cbeadbec552d0d270
+GIT binary patch
+literal 7282
+zcmV-&9F5~rNk&F$8~^}UMM6+kP&il$0000G0001=006fD06|PpNYx1d009ieZQDlj
+z{$uA(+J8h$0N<Cb$j>QGD4QUoNT+xOL-Y`kRtp$HZ}>kMmgN6mMAm6{&usVDwr$(C
+zJ^SX`w(Z@qZQHijyJMerpHmr;H+r|Kx-!q)dtdK}m;gtSBngp!wdbJn!LmDW2#AOY
+zfdBjde<mUd%L)VnmSqWn4;YvmoD0hm_~3z7bbQi7iLo)!2)R+<gMhH20stst3Y2Ty
+zvHzq;o|-(QU(Z&RlH&zD5DE(bAf@@x$KIc{Y}<j8mwvna%lUKXj&GgupEjlA1PFl<
+z4FLd>t9O5P<(XSy<ud!{-HSh(T+spmD-f_SA|VRI_}Y)HyOL!SNjrDgw!?qPN^#DQ
+z-~Y2)*=PU&v@DD?BFX}YYX0%=KeJSBc1vW3ZMK8QKN{7wMU7+x0D+N22mnaw{Pdcj
+zQc6lm<mxXKv&^{p+liHrv?v}Akv34O^%MKjnL}Yo>^-qkN>S$JL(|5W3jjt66o?5O
+zrvH>Gi8!x`q?D|b3Z9%cC?5zB3D81_?fm7Tpi+wSE;o_1ZC07PpQw#s3F8TXK$9mn
+zW+^3Y$v!5sL)X7=lK_BdIDle(SEZ93mc)K1nZAEy5dmfwXjT6B=N#6PlnP(`rezEW
+zG?ow$H+cC?rI@r}lB|Lo{!<Q67zzQ({c|5FTN3L^HmhIWZ)AZm6Nrj$-{i1l?@=CM
+zCOe$Aq(dB-7}2V?;0|$~ZiuPe>AMHSqIm>}ZY$FiQy#d_b&g1d4vdTgG>ibN^9HGG
+zVy|UzidhmL7!(6&7Km!O$qq^O-sl{YZSUwC2S&9-vrU<thlUqMm??XI?>K`XLZhXb
+ziaf%YOEJMJYiFluGzLJG?=nfUw;mrO&RJd`En^gY@17*~R!@ayr5*gVG@uzU>9H%s
+zUOy+yFo*wqBpHloiJoWJb9n_bY@ZyRhz1Z)bs5>@h2*tE9NOJ08ui1Z7w?COJ$myH
+zWvyssX(yoT8Oh#yb7DjWf2g7xLdC@)^2Q$yFw1LC71Rupp1DnIgfPK$q<0KzCAyuI
+zhRc{&)k2-hFUTSGlJ{L_>^~;NX@s$pt}FJ^{|+#Pme)npr{X%2Ug(dUvAp$aGNL9J
+z7<)6!gT982b_{5OSY}07dh@phM<g>oD+H(m3NhxgWDosy6HMWg?SvjsW@*R^{nhe_
+zW$L>H0CfnAy)4;8IU+jL3Uz=|3q$P5{|_+Ve<@K1?0lZx`^bUtrdpt3;>)SVaz=kn
+ziq@dQDstsZPdGHQga&O-D>9f9KGp(#7d7?{aRj;fj~KsU>=W724f>88sPMF6zDsz;
+zHkuPwyXyKb>22x7ryiZ_?7w%U?W)fxIJrF9@>}A&wse!POu6pedpg!{32)_)VImR@
+zs?3j){TBa9h8w!{SEw5f!gEUaOvJzF#{b=BhIw;Mza_kxBb`+$|DB*wb)voBl0LJY
+z=}PH;a&1`sHay_7lv&avUts3e6N$b;EV7!ME&bcF4F_p&7w{L9-6qM6%Llf3lKGL}
+zsvWis#f5Z`@os*fHNGg>sn1AdCip^}uLQLI*@I8KYv9J@fUgi5opn~}sot>+>GbzL
+z=(DmrB{@US^p3QooSbWk=qpV8KF3A*-)PZ|$_eeS4!#1krrwi2tDfm%t9_CiO8X5O
+zpSQ_@y=Ho1nWBwTvR9Pw8DPpH=?K-OZhA{vNfu>bd1=3i=%<2Cg4Hteq9~+feInOa
+z@f$`Dzs%&IaF^XuH;sgY%{`Wf8lm4}CS51~dnNZ9AyH*I!OEO{v9skb#Q3+;oD_Ap
+z>}L6hY^OV0WdGDN%5O>2LhO?EUVO0Ko;=eb0RDocSz&iyd$PBoK%d2blM_j#y{ruS
+z3oz>aY&X@H<$Rdmch>V6Zm3V`AazQV0H47>@4NffY!Uz73DI{WZ<C8YO&zKU{_B0s
+zRr-{DQY%V=-x1pW>dMESe4bx}dgnaov)FzvT7&WjT=gksO9e-Q28C8icVBw+OFRDo
+z#C)7>GTPf;O#_6fcU|=<*;`UT0|Bjmju=XQ5~Tq^ku5|nyuT;3mHs&Bh}Qer?51}W
+z^p2~25p}>p*U8P3ExPNjx%Mv91udZRAs2c=>n&Z)*&yCmSPzW;I!rE_YWGHT)f=Q-
+z93wzS0i*9rM@chw)^zK^c5>dZG{I^YU1Yo*xoMyQJ8c-~fg*k>k+Y`Cp6UrL+9dnW
+z`hZ%1Wj&rHeL?J0s#M+}<<6o4^c2wSsw78x&63hcY1ft?Cg_49Ws@x(HD|7~Eceof
+z3e*Iwz_Z!5BlBsE8#^7fPkg!_Xd|%2HA%i$mu1Rw;(DUy6$X7p@_Ld^s>iw@T}~Sc
+zJsqu6;IWVk5AW=D30)GlNL}dx8lz}(#ZAx5-UKBb5^pH4SHV@v)})(dEesH)Jrd9f
+zMD)LGa+F@9v~{IpMJuX+)`&HZv+bxCt!qP*p@Ur!wE~QtbXhs_vbrP}XCzN_i$Tym
+z<^5EpOUp-O+B1ouJwoM8Ob&WaT1r$x_UN}3D6|6*{|qW8CfiFzhfvWzsa+KX=#S9&
+zw4)m7u|ns>KP00Gu<%l6bP%dL1V>>&J{2$lK-AlIp3tI$1{&b|gTRpE?kOiZPxh8)
+zqv~99Q?$I`i{p2!D`kqJYx1PX;2RWw6>AFXose?UO)IJfctQH(Xb6PCSG@@>q<{FM
+z8=@(y9CX&os$2*17$2?#h5(G4Aw9WGW$-zY^JC0`Q-kEFwo=lWJY=W+OCXp6>YmMu
+zXa*1c)&PwG7&|TGqEv#_gLh7(T%K$a7;r<nQX!J3=-kej6cAtztLR#iE|Qk2)KCl&
+zovICJ4zR@7yWTC$hjcFan`8k7MJ%*VlB@j(mN_EI7;T|R0CC8zFgZ(hsz<H|tS&YM
+z!-~S+QrN}S-;ml?!8q9DxRUO+J=`g&1w~8)7(L}4X~Y4mX$6b}Q1rWSp7fZL>B;6n
+zXns)97!Nh@bw2X|#y*$H^OxotxcOv)fdE@yRAb7c9bcK-BVZyZvDyPWJrMSOoj$4%
+z7&+!scC`B<I`{REB4Fs@X=iQ(P0?=X(1*Pr0#jFA_<N?C&e{!bez`+D7&~t0yq_pf
+zkW*HQ9sj=Qk;YMA@WMks-k0v|o@9cRQp!R0kuOJALNI#14$m(AO?pv~YpF|}TwVQA
+zw}N1LtNNHvcHQ%&q9ixOO7Y*O9sGJy{V0flDeWJdbv!c<lyn|Cx9GX<MIkbZ3jJPQ
+zd^XbqSlLm35&miQ+rw)_LBx!yJ^b}0r_($r61h>ivM;WAe|(c9h^UG6hrcrK;B|Yi
+zh13qqdncB@GrmOu&=dexP&goN5&!^DLjautDxd(k06s|~jzuD(ArtAXd?*Bjv$uCJ
+zQb_wxyfneRC-ea=xG><1703qJUY>UpbEE0l%BlB1`ws>Dw|y5v9A(;v+t=do)4)3v
+zdj9|y){pqSXML*kVE>ovU;SSWZ^U|mevkiw>e=;=pRcYxfj?Y->wUj`^?NS#gZ++Y
+z59jmw{QiGGpU>-Sd!^1z|Goh(8X1dn5#x-%s&TT%xN&y*P4y%C#MFJJNTcb|Uw6w~
+z^aCG;gwjKgdf<4R$A9C+MR<Z0?n$gv24RXMG6Jc^-hj}ufB56A#8oIWCQg9v+wOt=
+z9^cyMFhyxQB5mi<?3!oco~wH%fanY+Q$qN1I^S~&#-}JUa|UH8=<K9_1sEHmxmSr?
+z(D}bXe-g(Ay9h=W&O!f2BVB!?0M+q$8vK6oVG=?jCtIi}_Zv_Aw_5_pF9NS$InQ~o
+z-)Le*agJir=4>vsD(hiDT_s=)Sw|m5KF?N}vUrcH_9lCrQa1J6K6j|64*W0HM~;$N
+z1B2SAhFWk;=-`BFU0jkb<I^HFK|uk@2>)Ch3%gMW*oc{P5V+`P49tJcNBdaJ!%yIA
+zI}t<F^<3NZ^_61>jR41*nZb3L2*ym@RGAwOxH)XiBVdDY&~uQS^AC#B3YT%Z%7(w9
+zlat-Ngn?<y)t}VUCICH1cb5K+(bvZO_lw!1r?fOWKNDQ~@;?Xxw>UDVs;hBCbL;^A
+z{?Hr%006lD5%sTTt&FG7IXEJKp{wgb47*I<EPhP0?yB6S|M7^4<_4GBMk7nZ2k&?5
+z{K)oMXRgXt5s2O}B=`?8a!iWeH_m!b6wh+DHm>$Fj%o%Oanf|ZSslB))|(O3U=f`N
+zmN@BqwWgI!**`XO!LJEe7zohvzAvvIjsO{!T9x#QE&J#pL0(^mM4bK87Iodf=TaS4
+zG_6yjdRm$sQDBh~d9;8JR>nt8=rf_BUaLDILW@b-*BK5vBR(bdcxRHKXZY2$+99V4
+zmH3;VV##Biku4{2qfodMD*sh1;?#x_JMNlTu<QSs0B^5n-=e(&!_X_~{@9!AfliFi
+zUkfL86+0>RPwN@j%+K)qONVm!6j~_*?Wbh4|L4j!<xLX<(o|gs)xJC6r~lePZTDlW
+zZ<Z*R%LMN-iv6iD<@G9$7|k=O>ye{@pin4r7cSll{oozKT>6{*<M&GCWTn<x^|;Jo
+zLrCL*+Kr~UlV&1l@0G9U6EGTEpxx<b->TagyQngQt$1)YSZwD&Mf`_}>!iNei9y8r
+zrq0Sr(dciw61trnlAdrH3AhI?jZPxg+lHS7c>RGi#Dq+3kiDrNmD&cf!P?2q%O~P;
+zIQY#+Z{3xolmK}<4<s;b)H{v)0|}_8Djf&(!V3x%(E@VbLGek!)!Yv&48B|<qn<lT
+zh{RL?Z}f+XQs{yv&m#wXvDLhh!!4lyabu6mg;%ehv&@!AL>sktd&!g3Kvm)&uofB2
+z&6coHw8}J=ae3?4a}9Mg4N(?QBf_&Iqv9?lAwyY~F<cWS_dhl#RwUFEZ4lA6sHaV+
+zuG?2^09C+R*Cki86tH|EX;#+F0-=~_=KpRmi5~t#J|0wp&<ZnQ>(-2`BqdtX>zxQV
+z7u1|%ha2M$(*7Bhy`YIc-}3Em7m6m@p^<lGblG^rKTt7=t}$ZL-()jpa0%BgSsI3>
+z>8+P>h~CdRj0>GKX%CzDr~Ur4WRv{sGCh`H{;j%v`kX%)%7O7v+*(K{wcuW<=z|HZ
+z7sIhY^N%QFcJ}z{$h0SOrFj9)lDf%-3~Y|O4SVaQ6M-IA0o8(_3^7?+H%L?>>!AWO
+za|&*lFoHD{P|hy&CW{X93Xqp*!ZdGre?UparU37=@#kmV^Frx>-X0Ru(&*>Aj(8Dx
+z&wQ0IMbu|cU;;@_KzMCCrp$ZZ#;NUt3EOhd_xq`V*n=tFRlnJnd?KV-#|IPm3x)LB
+z?zuI*i9LAk07PpQ#$ww;>PpwqM0<9g@E{mjgznyG?O-2&NH&`$pfh$V)#&O@c#-rT
+z3#5%Sla$uw28J2yEhQvCI$9~Ezv4V+<p?jWI>RFrF)lCEP;W`=+LVPT8t8M6V!m5u
+zQBd<nbQcSKb}DdYo+h7|U^;_KhwXSm2+VDq@r>&E#O!;HqrDAga+%f-$oR4^xUKQV
+z*)Xnwy&kY&Q>J7(G-lG@_o|{~B=3!W)7+AVmTY+va*W<vGq(0`6LI-z_sv>Ldb39`
+zYvfi4u+o$cE86aD5d$g2s4r{V+Bx0oLuEnjXK?<$tRqYjb+_uXvN&k~^gXmfm}?4z
+zymMpAD*95`9-&w^BOcO?C<XL}reL~hfUK834WKm`Ypcwx+laWgo>A0i52Y(v=g1-?
+zfL?;575L?wX%Wh5#6pVpa0M?r(=p+ebxm7IA0x)SX?rG(@~D!+n!gJ%>M;HpKS3n)
+z3p0qG6XeAfS!7ujBUct>1rbF<524gtAs@!_*L<7cHjdtQoiSuHO(D8G@`M?bUGE2{
+z{%atMUE5_UI&H9pW<E5*LKehl)*r+rqr|8&5|-7Cij9e78R<zx06C@kVe^V(n_EGm
+z=aUoZ97DFc2*;K4cbtOt?4v-eD28XNgAN4+Xi8k~YxVDwZ3xCn3F9DLmv`C>Eu$eJ
+zV^4P5eGRqvOYI@2+#tsPeEx#|z3*IIRE2KVhCgTcRMZzQ+(+<M&5u=xAHqD%<=!24
+zZr3GQQEPUG>oq>-e5ns#rM;jj*15%N#cuk1Ht+CCJdZwlw%>!zo`|%UmIW6M8sMd+
+zDAaX)OoPa}rSHENzdP-}FO15U!$k_o<~q+~?yMH%frIW}tPiL+Y3r_9OnQM(N5mz!
+zVZztq6Dn{vmc>$U1ywVG_|(_rjvDsY$UBP%7Z>W)@!BHOIm^)+^LJm&S6||H`|m{<
+zhF^AqyovJ~?(bf|H@7@aE4BCS>*Cwod>6XTUG$1my}!MXnP%xSYk-3K0m|0H#uHO-
+z7aKEamysr~b_sOgd9kSyn1<3H+*tb(&CF#Yb?Jj!oAa+m1#?!wo}2I~;J2l=sLYK<
+z8={=ZQDW^LNWM4HWx1jXm_i{6CB=KiHRgUrp^4O{oDqdBMTX(!YkcK+?%Z!P$@6vw
+z%XHm(20=9P7+pd2xG<`gFHnyDi6D}i0=PR<wGI8w`qpXQ(C6M!@wRwDS!~%suU2|m
+znPWcYS%y*AvMTx*XZ6uvytZqri5=3lqJb4DdI4`y1QM1<fiK#d2j}3C<od*k^%6h?
+z@`}4QXQlzoUZl?8mbM9aXLuS-@tpE7b^DAd)|^flrj|6`7|W(rSe)jNosY<Z%7fxH
+zG6`0HvYocw6e80c$Y^3dw`nMH|1{>vtXC5cAAmim4NuR^rgUeoXdNQj^+m>c(-1m+
+z!t?hztU{ua2}RBAultjeQPoFk?8lJ&YIiNu$_8eFJb6Rcrxl{tK!0SRih;|>B=#g3
+zAe$1adjMGY4txNdBB=uLB><Cg>he%rYA~2?d*+Io9fSGd<J`H=&V8GS7TKaGd-w?S
+zp3dq#{riR7|BU^aG-cT<P>rOuHd=o?9()Vy(l?^a>du?+YKUJPB^e@V)tS+%^X1S~
+zM=4|exhMLKO0s@w_R6E;q;p~txw8HAM=GTCpvl+|-!Rc{{OMnMF#yW+V!s(pzIc0y
+z=Or=4Tg3!e%Y>tCAV*D|qVN9chVwR~o`~|@?G+c|T(^q*XaNAQ6ghsD;7G$O!X%2;
+zL<k<R?xW40k)MJ;+W7NLJCB<;;%Xa5LAh3i*N*f9Qga6HX*W^f&K)tEq8<MKQc_AP
+zy+Pe1@n-$uk6WgdPQxxF(&+p;c~}DyIig5Zy1xZ?<cY##@}mPi9ve@J*4m$ppE|z|
+zxQhtK!3xejVm6$BvEK4YQ_5d1CtwLRftII0><{IQK4q?{i%R@q8U)EIOut2w8$Q!p
+zJ*|A$Lj$H>+=V=BKWRSwTwMzoD*}>@C)iyVw4hMRe#8F_eamqF`iV74$>`<U?s${$
+zvYLd+pQ_d%j!OQE@`hQovYyOUiY`S-zD@Ixnq$x#b<ZcDQK7GIHuq?ZNkXWmae%dR
+zp}0R0Zki}6t*Ad`Z~u2lPW1Q?K^uH<+HwTf1TeG973U}GAid3+9O?|%{H65p{6YWo
+zPiE!f{nz3N^%#gjdDv1egnyKhbDOJdJErAgAQfK||D4C+tA8w@==PCq`c1bzNFY)S
+z#nK;&HO~8<^AFzY;-xb-uk5@I&S^Qued&#jcgn}4#4Y&<A!n7BZLVuUK`iB{fOf7L
+zSX?2M4pszF2zdh=su3M(A6`ghAu`ZuqbD0s|C9xM6MArCJ|@%pncZm@g_37SQe?38
+z!Z-G6h#Qf6L!=NCr9fAlJ{CwxcnKZCkX58DUwHpcux`EQtgeIyPFZYaXMGW$L3#tg
+zluK2pn$Q-MAyY~H&+O*0<DveRUVMKQs|lKe>Zm#T9wZ%6xj4s;hKI8;=N~TzlphZZ
+z2z(7~66YZB>`>p%h(jvfKM7M~xn3nFqa1^=W8~p7=84WFht9w$w=4Pdt)DKzl0Tul
+z;UDc2+PR6K^b1WzWAyRnipMybq$faC3$=G2+|rP3q0lai8-exGdN``Q53<ji{nR8;
+zJE7SGh&&pce_RI7u;9UJ`S)13)+fcfY;Hr%|F_{Y2z>bZjxT_n?!82%a!oY2jBp27
+z?g78twH8_3y?OHY&SVW)H>LY3Anj}qwL$a?SIE38iO+iBay4-e>aGL;Rmnp6CbMri
+zUvsdv;DVkStoxH$F<<&crm}=&Jm$gjK=7~r*}wA>QozRKvZgrIw^!we7)|E^BY;=b
+z*g$I>O;eBKj)(l^MI<XOIDqxyQaP@HPaVK)uVt3(qpos+j|8us{pEAkD8#Zz`GPYu
+zYy&RL$ZP9FaQn<V|0bYbODR}wveD)%cSp}!DkFU3j6f1H*eeMEPtjvl3ac%`=LLK|
+zyOR+2aB9O~w_3Lmifj;IXxYCkAmJ<_#9#pCdhCgm(wyV%?#xiM)fQsPH8;=r*Z;Zd
+zH<xN!$c>#RMN!%J2cZL92yit~eq`+0#8)*G5dC^R?zsr`Eam;F=z~jA1Y<Lw>w!}_
+zh*I{r<Lq2N`O<6DEbxi+uRR1r^}M8f)&53#qi;PyeJA6sQ&MIJNDhY)V&mk{>*oX{
+z5x6L>LqnV~EKY#PoT9y&CL18<HD`$5F|NGp${oj#h273@ryIKYGXnuCuF_B;xJLh_
+zA%!h%y>HEDUZz+&WCHT^?pzq3T%E<p)3IB3`!13L(|O(1L3VL{A)Pr`A#XRV05K#n
+z`<%>73hj!zvlu_Ps-YQ`IfWYpZ7{^dpsGax9xJGw`vaFyE90AK>)m>M^sbg}WKHv#
+zKSYW%dl1oQz5!MLNNSBbP*ZWn&^(P<y)**7cr~jHDQhd}1jANuDFL~_0CZ<e;jHQ@
+zZN%@;2o|mH?=^L;{c3QXC}6^0c3Yj)C2T;~sR4Z)ZtkVMOo=U=8OOgTyU-Nr#(xj)
+zI;1a9$oJfdaXYSO6QQqclSuVPHZJ*#Ui7Z#Yh{!5Pl3F)_8&@_dIXv5^wV{4B_5`5
+z<r+534sFHyR)r=jsmB8#plBc2!r5r>b;=anGLjhfjbC6|n;K)qQi0|Dq}ng4j+_EH
+z0e}yhZ0`ryIQ`$V#-K{~AQ+eiqH3?M(Gv!hpq**L)P>KKN;nFlN%#;<766t`0pk4j
+z<X0S3b+@rn^?t<)>KG1za)@3TE5$b5s4Q_>bhMgEHYneu{1k}B3y9j%KaLxf%Nmi_
+z<c)?=YnSJ4WPx`53K6!kaA3(P!zM1FTl0SjN8Rqx)k^e?Z=6>gcR*ds6K<Y!_Cs+{
+zAHMn#?{L?Wu1F&{+`n)07Rs+}xf>D(Y!Ub0x2uYY>(Os^A1>utKKICsfSfHpAS^H8
+zYxA%vN{U3hBDYjjO$TRoen}~beeqF9Gj*B2gNferxHV!SCL4@98J4Wait>RrcZ&X@
+z9G&q?RP#=}Yv7Q0dE%;!G0>gVwgC&i)Um!a$9y;JW{v>&>ED%#ExYiJEAgXlh+Eji
+z_&()Q$q&cXT(6RyFs%Wm^3Zt7AUA4m4bJuoS)^^y$6D>oFzLV*u1N|Z*1#afJnb|t
+zHAih}wu#mMHSW2_cQH(Ud?{3<5(4gnw%-1v3%mfwW`Uqc$ADw1{ohn4|M~*<_zkF6
+MMDU~1fnWdt0O+MTxBvhE
+
+literal 0
+HcmV?d00001
+
+diff --git a/faces/riki.webp b/faces/riki.webp
+new file mode 100644
+index 0000000000000000000000000000000000000000..570057b06432eb15bf0030a10cb7b55f830d1dfa
+GIT binary patch
+literal 4968
+zcmV-u6PN5#Nk&Fs6952LMM6+kP&il$0000G0001=006fD06|PpND~ME009ieZQD4~
+z{$r<Hzjs7T0H3N3nGU$ZmQ$GG4A*c1WQ+!OVJ$Um+m1KV`+l*Clw;erZQHhO+t%8)
+zZF_fY&ty?WpPuJOgE!sh>;Bw`m;ld_ZOgVLNfIuCn!qD)2s(xK>%Ne-YE>SMz4ks8
+z0ueC*?0^6NKY2;A*}bXR-Yj>L)l}@@mXz{M`%YT2ao4_mJ2otw(5qpFLn=m?GwKan
+z^T>z4-nt(s2p0tZ&bj!*tB2-vDsPvH1>8|>(AGE4<b-tqjIJwr*FHTwsjizF9(UHC
+z@#L9Y1ppx?L;y8#`l%Upod)NqHTSjavW|d-V?zLd!1+f;mNOZcx%7k=Z>flYH=42F
+z`%TT9M#Vjyk6x4!1=Rqc-hN_0GB+ft?7YwOF@Z(|fcy_9r%DE7Yjxx*VB!D(QT}dz
+zDQ-B)gWm8177YMYe_dGGV0hN_9~DgWgoRN3ZH|{42`{<oyoQM%01yFD{cfViKzNny
+zHvo$cU}5FM-gd)~s_p$t??kH*15Y=S3__~7--oXiZSQR@WemK`?t562PT}-ehar?)
+ze-Hny^2?2lAa(u?C`!)o@6}%VY-3JqMXKUJ`=XOXow?iR8X^>}^ZXqd#7Q+?2m!#q
+zNdLZziMF)ezeD*7`nP&Wb56Tz?z8&mtvF%kHeYKERlb3~MGm@n_Nf3As`OF)`O0+J
+zXWT)ghVNeNXQIl~_zMkC#is(B-Bcy*4j^Kvd`N%0DpBTs=MfRf`XRi~o70r_gj}f7
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/faces/zen.webp b/faces/zen.webp
+new file mode 100644
+index 0000000000000000000000000000000000000000..937f6272f1a4e79866b182af3fc5527d136ff68a
+GIT binary patch
+literal 6978
+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
+U3}}|x$4T3@paM=^hIRk|0CLQBB>(^b
+
+literal 0
+HcmV?d00001
+
+diff --git a/index.html b/index.html
+index ee8dcd8..dea6e14 100644
+--- a/index.html
++++ b/index.html
+@@ -410,6 +410,34 @@ button{font:inherit}
+ .v-koska .mouth{left:24px; top:34px; width:11px; height:5px; rotate:-4deg; border-radius:45% 45% 50% 50% / 40% 40% 60% 60%; background:linear-gradient(180deg, #c8102e 0 42%, #6e0a1a 42% 56%, #e2345a 56%)}
+ .hero.grab.v-koska .mouth{top:33px; height:6px; background:#3a1a14; box-shadow:inset 0 0 0 1.6px #d1153a, inset 4px 0 0 var(--gold)}
+ 
++/* ---------- photo faces: an inmate with a face photo (CHARS[id].face) becomes a bobblehead ---------- */
++/* Every faces/*.webp is framed the same way (160×184, eyes level and centred at y 104, 40 px apart),
++   so one box fits them all: eyes land at y 18 of the rig and the chin overlaps the neck. */
++.photo .rig .head{
++  left:21px; top:-21px; width:60px; height:69px; overflow:visible; border-radius:0;
++  background:var(--face) center / 100% 100% no-repeat;
++  transform-origin:30px 62px;
++  filter:drop-shadow(0 2px 1.5px rgba(50,25,15,.35));
++}
++.photo .rig .head > *, .photo .rig .head::after, .photo .rig .ear, .photo .rig .nose, .photo .rig .hair-top{display:none}
++.photo .rig .hardhat{top:-26px; transform-origin:26px 67px}
++.photo .rig .hair-top{transform-origin:19px 50px}
++.hero.photo.running .head, .hero.photo.running .hardhat, .hero.photo.running .hair-top{animation:bobble .34s ease-in-out infinite alternate}
++@keyframes bobble{from{rotate:-6deg} to{rotate:6deg}}
++.hero.photo.grab .head, .hero.photo.grab .hardhat, .hero.photo.grab .hair-top{animation:gulp .55s ease-out}
++@keyframes gulp{30%{scale:1.14}}
++.hero.photo.oops .head{animation:ouch .5s ease-out}
++@keyframes ouch{25%{filter:drop-shadow(0 2px 1.5px rgba(50,25,15,.35)) sepia(.8) saturate(4) hue-rotate(-30deg)}}
++.suspect-fig .figure.photo{top:28px}
++.mug-report .figure.photo{top:34px}
++/* Riki's face is cut tight to the face, so his long hair hangs down both sides with a fringe on top */
++.v-riki.photo .rig .hair-back{z-index:-1; left:23px; top:-4px; width:56px; height:84px; transform-origin:50% 5%}
++.v-riki.photo .rig .hair-top{display:block; left:32px; top:-9px; width:39px; height:15px; border-radius:55% 55% 30% 30% / 90% 90% 25% 25%}
++/* Mällu: suds and the whistle move clear of his bigger head; the drawn wisps go */
++.v-mallu.photo .rig .wisps, .v-mallu.photo .rig .mpb, .v-mallu.photo .rig .bags{display:none}
++.v-mallu.photo .rig .head-suds{top:-32px; left:29px}
++.v-mallu.photo .rig .whistle{left:74px; top:30px}
++
+ /* ---------- Mällu, the block boss: same rig, skinny and shifty ---------- */
+ .v-mallu{--skin:#e6b796; --skin-hi:#f5d2b6; --skin-shade:#c4906d; --skin-deep:#a0704f; --hair:#6b5137}
+ .rig .ribs, .rig .tat-cat, .rig .mpb, .rig .wisps, .rig .bags, .rig .towel, .rig .head-suds, .rig .whistle{display:none}
+@@ -735,12 +763,69 @@ button{font:inherit}
+ .stats dt{font:700 10px/1.15 var(--font-type); letter-spacing:.12em; text-transform:uppercase}
+ .stats dd{margin:0; font:700 22px/1 var(--font-type); font-variant-numeric:tabular-nums}
+ 
++/* ---------- leaderboard: the block's roster on a letterboard ---------- */
++.start-actions .btn.ghost{flex:1 1 0}
++.logbook{display:grid; gap:8px; padding-top:12px; border-top:2px dashed rgba(28,33,36,.35)}
++.logbook-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
++.link-btn{padding:0; border:0; background:none; color:var(--ink); cursor:pointer; touch-action:manipulation; font:700 13px/1.2 var(--font-type); text-decoration:underline; text-underline-offset:3px}
++.link-btn:focus-visible{outline:3px solid var(--ink); outline-offset:2px}
++.lb-status{font-size:14px; line-height:1.4}
++.lb-status:empty{display:none}
++.lb{
++  list-style:none; margin:0; padding:5px; display:grid; gap:2px;
++  color:var(--board-text); background-color:var(--board);
++  background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.04) 0 4px, rgba(0,0,0,.35) 4px 5px);
++  border:3px solid var(--board-edge); border-radius:6px;
++}
++.lb:empty{display:none}
++.lb.loading{opacity:.55; transition:opacity .2s .15s}
++.lb-row{display:grid; grid-template-columns:2.1em minmax(0, 1fr) auto auto; align-items:center; gap:8px; padding:5px 8px 4px; border-radius:3px; font:700 15px/1.25 var(--font-type)}
++.lb-rank{font-variant-numeric:tabular-nums; opacity:.65}
++.lb-row[data-rank="1"] .lb-rank{opacity:1; color:var(--gold)}
++.lb-row[data-rank="2"] .lb-rank{opacity:1; color:#d7dde0}
++.lb-row[data-rank="3"] .lb-rank{opacity:1; color:#e0a070}
++.lb-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
++.lb-char{grid-column:3; padding:3px 5px 2px; border-radius:3px; font:11px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); background:var(--manila)}
++.lb-char[data-char="zen"]{background:#ffd23f}
++.lb-char[data-char="riki"]{color:#f4f4f0; background:#7a5638}
++.lb-char[data-char="koska"]{color:#fff; background:#d1153a}
++.lb-hide-char .lb-char{display:none}
++.lb-score{grid-column:4; min-width:5ch; text-align:right; font-variant-numeric:tabular-nums}
++.lb-row.me{color:var(--ink); background:var(--jumpsuit)}
++.lb-row.me .lb-rank{opacity:1; color:inherit}
++.lb-gap{padding:0 0 2px; text-align:center; letter-spacing:.4em; opacity:.45; line-height:.9}
++#boardScreen .sheet{grid-template-columns:minmax(0, 1fr)}
++.tabs{display:flex; flex-wrap:wrap; gap:6px}
++.tab{
++  flex:1 1 0; padding:9px 6px 7px; cursor:pointer; touch-action:manipulation; white-space:nowrap;
++  font:15px/1 var(--font-display); letter-spacing:.04em; text-transform:uppercase;
++  color:var(--ink); background:rgba(255,255,255,.35); border:3px solid var(--ink); border-radius:6px; box-shadow:0 3px 0 rgba(28,33,36,.35);
++}
++.tab[aria-selected="true"]{color:var(--board-text); background:var(--ink); box-shadow:0 3px 0 var(--ink)}
++.tab:focus-visible{outline:3px solid var(--ink); outline-offset:2px}
++.name-form{display:grid; grid-template-columns:minmax(0, 1fr); gap:7px}
++.name-label{font-size:14px; font-weight:700; line-height:1.35}
++.name-row{display:flex; gap:8px}
++.name-input{
++  flex:1 1 0; width:0; min-width:0; padding:10px 12px 9px;
++  font:700 17px/1.1 var(--font-type); color:var(--ink); background:#fffaf0;
++  border:3px solid var(--ink); border-radius:8px;
++  -webkit-user-select:text; user-select:text;
++}
++.name-input::placeholder{color:rgba(28,33,36,.45)}
++.name-input:focus-visible{outline:3px solid var(--jumpsuit); outline-offset:1px}
++.name-input[aria-invalid="true"]{border-color:var(--stamp); animation:shake .32s linear}
++.btn.small{flex:0 0 auto; padding:10px 16px 8px; font-size:17px; background:var(--jumpsuit)}
++.board-foot{font-size:13px; opacity:.82}
++.board-foot:empty{display:none}
++
+ @media (prefers-reduced-motion:reduce){
+   .stream, .splash, .steam i, .puddle, .sprite .trail, .gold .body::after{animation:none}
+   .sprite:not(.caught):not(.squished) .body{animation:none}
+   .world.shake{animation:none}
+   .hero.magnet .hero-aura, .hero.magnet-ending .hero-aura, .power.ending{animation:none}
+   .hero.running .rig, .suds, .hero .torso, .figure .torso, .hero.running .hair-back, .suspect-fig .figure{animation:none!important}
++  .hero.photo .head, .hero.photo .hardhat, .hero.photo .hair-top{animation:none!important}
+   .card, .overlay{animation:none}
+ }
+ </style>
+@@ -820,11 +905,12 @@ button{font:inherit}
+             <li>Don't step on the roaches. Squashing one costs a strike.</li>
+           </ol>
+         </div>
+-        <div class="actions">
++        <div class="actions start-actions">
+           <button class="btn primary" id="startBtn" type="button">Start shift</button>
++          <button class="btn ghost" id="boardBtn" type="button" hidden>Leaderboard</button>
+           <button class="btn ghost sound-toggle" id="soundStart" type="button" aria-pressed="true">Sound on</button>
+         </div>
+-        <p class="fine">Personal best <b class="best-val">0</b><span class="kbd-hint"> · Space starts, P pauses</span></p>
++        <p class="fine">Personal best <b class="best-val">0</b><span id="recordLine" hidden> · Block record <b id="recordVal">0</b></span><span class="kbd-hint"> · Space starts, P pauses</span></p>
+       </div>
+     </div>
+   </section>
+@@ -869,6 +955,22 @@ button{font:inherit}
+           <div><dt>Best streak</dt><dd id="overCombo">0</dd></div>
+           <div><dt>Personal best</dt><dd class="best-val">0</dd></div>
+         </dl>
++        <section class="logbook" id="logbook" aria-labelledby="logbookLabel" hidden>
++          <div class="logbook-head">
++            <h3 class="label" id="logbookLabel">Block C leaderboard</h3>
++            <button class="link-btn" id="fullBoardBtn" type="button">See all</button>
++          </div>
++          <form class="name-form" id="nameForm" novalidate hidden>
++            <label class="name-label" for="nameInput" id="nameLabel">Sign the logbook to put this score on the board.</label>
++            <div class="name-row">
++              <input class="name-input" id="nameInput" name="name" type="text" maxlength="16" placeholder="Your name"
++                autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="done">
++              <button class="btn small" type="submit">Save</button>
++            </div>
++          </form>
++          <p class="lb-status" id="overStatus" role="status"></p>
++          <ol class="lb" id="overBoard" aria-label="Top five"></ol>
++        </section>
+         <div class="actions">
+           <button class="btn primary" id="againBtn" type="button">Back to the showers</button>
+           <button class="btn ghost" id="menuBtn" type="button">Change inmate</button>
+@@ -876,6 +978,36 @@ button{font:inherit}
+       </div>
+     </div>
+   </section>
++
++  <section class="overlay dim" id="boardScreen" aria-labelledby="boardTitle" hidden>
++    <div class="card">
++      <div class="sheet">
++        <p class="eyebrow">Cell Block C · Top inmates</p>
++        <h2 class="rank" id="boardTitle">Leaderboard</h2>
++        <div class="tabs" id="boardTabs" role="tablist" aria-label="Show scores for">
++          <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="boardList" data-board="all">All</button>
++          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="boardList" tabindex="-1" data-board="zen">Zen</button>
++          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="boardList" tabindex="-1" data-board="riki">Riki</button>
++          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="boardList" tabindex="-1" data-board="koska">Koska</button>
++        </div>
++        <p class="lb-status" id="boardStatus" role="status"></p>
++        <ol class="lb" id="boardList" role="tabpanel" aria-labelledby="boardTitle"></ol>
++        <p class="board-foot" id="boardFoot"></p>
++        <form class="name-form" id="boardNameForm" novalidate>
++          <label class="name-label" for="boardNameInput">Your name in the logbook</label>
++          <div class="name-row">
++            <input class="name-input" id="boardNameInput" name="name" type="text" maxlength="16" placeholder="Your name"
++              autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="done">
++            <button class="btn small" type="submit">Save</button>
++          </div>
++          <p class="board-foot" id="boardNameNote" role="status"></p>
++        </form>
++        <div class="actions">
++          <button class="btn primary" id="boardBack" type="button">Back</button>
++        </div>
++      </div>
++    </div>
++  </section>
+ </main>
+ 
+ <script>
+@@ -887,7 +1019,7 @@ button{font:inherit}
+   const stage = $('#stage'), world = $('#world'), spritesEl = $('#sprites'), fx = $('#fx');
+   const scoreEl = $('#score'), scoreBoard = $('#scoreBoard'), comboEl = $('#combo');
+   const strikesBoard = $('#strikesBoard'), strikeEls = $$('#strikes i');
+-  const screens = { start: $('#startScreen'), pause: $('#pauseScreen'), over: $('#overScreen') };
++  const screens = { start: $('#startScreen'), pause: $('#pauseScreen'), over: $('#overScreen'), board: $('#boardScreen') };
+   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+ 
+   const MAX_STRIKES = 3;
+@@ -901,11 +1033,14 @@ button{font:inherit}
+     [2200, 'Zalupa Warrior'],
+   ];
+ 
++  // face: a photo cut-out framed like the ones in faces/ (see the photo-face CSS); it replaces the drawn face.
++  // skin: body tones [base, highlight, shade, deep] picked to sit next to that photo.
+   const CHARS = {
+-    zen: { name: 'Zen' },
+-    riki: { name: 'Riki' },
+-    koska: { name: 'Koska' },
++    zen: { name: 'Zen', face: 'faces/zen.webp', skin: ['#c8997e', '#dcb69e', '#ae7c61', '#92644e'] },
++    riki: { name: 'Riki', face: 'faces/riki.webp', skin: ['#d9b092', '#e8c6ad', '#bb8e70', '#9c7259'] },
++    koska: { name: 'Koska', face: 'faces/koska.webp', skin: ['#c49676', '#dab49a', '#ab7a5c', '#906249'] },
+   };
++  const MALLU_LOOK = { face: 'faces/mallu.webp', skin: ['#d8ac8e', '#e8c6ae', '#b98a6d', '#9a6e54'] };
+ 
+   const store = {
+     get(k, d) { try { const v = localStorage.getItem('zw:' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
+@@ -1165,9 +1300,20 @@ button{font:inherit}
+   $$('.figure').forEach((f) => { f.innerHTML = FIGURE; });
+   const overFigure = $('#overFigure');
+ 
++  const SKIN_VARS = ['--skin', '--skin-hi', '--skin-shade', '--skin-deep'];
++  function dress(el, look) {
++    const c = look || {};
++    el.classList.toggle('photo', !!c.face);
++    if (c.face) el.style.setProperty('--face', `url("${c.face}")`);
++    else el.style.removeProperty('--face');
++    SKIN_VARS.forEach((v, i) => { if (c.skin) el.style.setProperty(v, c.skin[i]); else el.style.removeProperty(v); });
++  }
++  $$('.suspect').forEach((b) => dress(b.querySelector('.figure'), CHARS[b.dataset.char]));
++
+   function applyChar() {
+     for (const el of [heroEl, overFigure]) {
+       for (const id in CHARS) el.classList.toggle('v-' + id, id === S.char);
++      dress(el, CHARS[S.char]);
+     }
+     $$('.suspect').forEach((b) => {
+       const on = b.dataset.char === S.char;
+@@ -1363,6 +1509,7 @@ button{font:inherit}
+     el.className = 'hero boss v-mallu';
+     el.innerHTML = '<div class="hero-shadow"></div>' + MALLU;
+     el.style.setProperty('--k', bossScale().toFixed(3));
++    dress(el, MALLU_LOOK);
+     spritesEl.appendChild(el);
+     boss = {
+       el, hp, state: 'sneak', t: 0, pose: '', frozen: false, lookT: 0, awayT: 0, whistleAt: 0,
+@@ -1570,6 +1717,270 @@ button{font:inherit}
+     if (S.strikes >= MAX_STRIKES) gameOver();
+   }
+ 
++  /* ---------- shared leaderboard: api/scores.js on Vercel, stored in Upstash Redis ---------- */
++  // Every finished shift with points is sent under the player's logbook name. The board ranks each
++  // name by its best shift, overall and per inmate. With no API on the host (opened as a file, or no
++  // database connected yet) all of this stays hidden and the game plays as before.
++  const API = '/api/scores';
++  const lbEl = {
++    boardBtn: $('#boardBtn'), recordLine: $('#recordLine'), recordVal: $('#recordVal'),
++    logbook: $('#logbook'), overStatus: $('#overStatus'), overBoard: $('#overBoard'),
++    overForm: $('#nameForm'), overLabel: $('#nameLabel'), overInput: $('#nameInput'),
++    tabs: $$('#boardTabs .tab'), list: $('#boardList'), status: $('#boardStatus'), foot: $('#boardFoot'),
++    boardForm: $('#boardNameForm'), boardInput: $('#boardNameInput'), boardNote: $('#boardNameNote'),
++  };
++  const cleanName = (v) => Array.from(String(v || '').replace(/\p{C}/gu, '').replace(/\s+/g, ' ').trim()).slice(0, 16).join('').trim();
++  const lb = { state: 'unknown', name: cleanName(store.get('name', '')), tab: 'all', ret: 'start', run: null, req: 0, booted: false, flushing: false };
++
++  async function api(method, payload) {
++    const ctl = new AbortController();
++    const timer = setTimeout(() => ctl.abort(), 8000);
++    try {
++      const get = method === 'GET';
++      const res = await fetch(get ? API + '?' + new URLSearchParams(payload) : API, {
++        method, cache: 'no-store', signal: ctl.signal,
++        headers: get ? undefined : { 'Content-Type': 'application/json' },
++        body: get ? undefined : JSON.stringify(payload),
++      });
++      let data = null;
++      try { data = await res.json(); } catch (_) {}
++      const missing = res.status === 404 || res.status === 405 || (res.ok && !data) || (data && data.error === 'not_configured');
++      return { ok: res.ok && !!data, status: res.status, data, missing };
++    } catch (_) {
++      return { ok: false, status: 0, data: null, missing: location.protocol === 'file:' };
++    } finally {
++      clearTimeout(timer);
++    }
++  }
++
++  function lbSeen(r) {
++    if (r.missing) lb.state = 'off';
++    else if (r.ok) lb.state = 'on';
++    lbEl.boardBtn.hidden = lb.state !== 'on';
++    if (lb.state === 'off') { lbEl.logbook.hidden = true; lbEl.recordLine.hidden = true; }
++    return r;
++  }
++
++  function setName(name) { lb.name = name; store.set('name', name); }
++
++  const bold = (text) => { const b = document.createElement('b'); b.textContent = text; return b; };
++  const overStatus = (...parts) => lbEl.overStatus.replaceChildren(...parts.filter((p) => p !== '' && p != null));
++
++  function lbRow(e, me) {
++    const li = document.createElement('li');
++    li.className = 'lb-row' + (me ? ' me' : '');
++    li.dataset.rank = e.rank;
++    const cell = (cls, text) => { const s = document.createElement('span'); s.className = cls; s.textContent = text; li.appendChild(s); return s; };
++    cell('lb-rank', e.rank);
++    cell('lb-name', e.name);
++    if (CHARS[e.char]) cell('lb-char', CHARS[e.char].name).dataset.char = e.char;
++    cell('lb-score', fmt(e.score));
++    return li;
++  }
++
++  function renderBoard(ol, data) {
++    const meRank = data.me ? data.me.rank : 0;
++    const rows = data.entries.map((e) => lbRow(e, e.rank === meRank));
++    if (meRank > data.entries.length) {
++      const gap = document.createElement('li');
++      gap.className = 'lb-gap';
++      gap.setAttribute('aria-hidden', 'true');
++      gap.textContent = '···';
++      rows.push(gap, lbRow(data.me, true));
++    }
++    ol.classList.toggle('lb-hide-char', data.board !== 'all');
++    ol.replaceChildren(...rows);
++  }
++
++  function showRecord(data) {
++    const top = data.entries[0];
++    lbEl.recordLine.hidden = !top;
++    if (top) lbEl.recordVal.textContent = `${fmt(top.score)} (${top.name})`;
++  }
++
++  function invalid(input) {
++    input.setAttribute('aria-invalid', 'true');
++    input.focus();
++    setTimeout(() => input.removeAttribute('aria-invalid'), 600);
++  }
++
++  // Scores that couldn't be sent (offline, server hiccup) wait on this device and go out later.
++  function queuePending(entry) {
++    const q = store.get('pending', []);
++    store.set('pending', (Array.isArray(q) ? q : []).concat([entry]).slice(-20));
++  }
++
++  async function flushPending() {
++    if (lb.flushing) return;
++    let q = store.get('pending', []);
++    if (!Array.isArray(q) || !q.length) return;
++    lb.flushing = true;
++    try {
++      while (q.length) {
++        const r = lbSeen(await api('POST', q[0]));
++        if (!r.ok && (r.missing || r.status === 0 || r.status === 429 || r.status >= 500)) break;
++        q = q.slice(1); // sent, or refused for good
++        store.set('pending', q);
++      }
++    } finally {
++      lb.flushing = false;
++    }
++  }
++
++  async function lbBoot() {
++    if (lb.booted) return;
++    lb.booted = true;
++    const r = lbSeen(await api('GET', { board: 'all', limit: 1 }));
++    if (r.ok) { showRecord(r.data); flushPending(); }
++  }
++
++  /* shift report: save the run, then show the top five */
++  function lbShiftOver() {
++    lb.run = S.score > 0 ? { char: S.char, score: S.score, caught: S.caught, saved: false } : null;
++    lbEl.overForm.hidden = true;
++    lbEl.overStatus.replaceChildren();
++    lbEl.overBoard.replaceChildren();
++    lbEl.logbook.hidden = lb.state === 'off';
++    if (lb.state === 'off') return;
++    if (lb.run && lb.name) { saveShift(); return; }
++    if (lb.run) askName('Sign the logbook to put this score on the board.', '');
++    loadOverBoard();
++  }
++
++  function askName(label, value) {
++    lbEl.overLabel.textContent = label;
++    lbEl.overInput.value = value;
++    lbEl.overForm.hidden = false;
++  }
++
++  async function saveShift() {
++    const run = lb.run;
++    if (!run || run.saved || !lb.name) return;
++    run.saved = true;
++    const entry = { name: lb.name, char: run.char, score: run.score, caught: run.caught };
++    overStatus('Saving to the logbook…');
++    const r = lbSeen(await api('POST', entry));
++    const transient = !r.ok && !r.missing && (r.status === 0 || r.status === 429 || r.status >= 500);
++    if (transient) queuePending(entry);
++    if (lb.run !== run || r.missing) return; // a new shift already started, or there's no leaderboard here
++    if (r.ok) {
++      const d = r.data;
++      const notYou = document.createElement('button');
++      notYou.type = 'button';
++      notYou.className = 'link-btn';
++      notYou.textContent = `Not ${d.name}?`;
++      notYou.addEventListener('click', () => {
++        askName(`Who's playing? New shifts get saved under this name.`, '');
++        lbEl.overInput.focus();
++      });
++      overStatus(d.newBest ? 'New best! ' : '', 'Saved as ', bold(d.name), ` · #${d.rank} on the board. `, notYou);
++      loadOverBoard();
++      flushPending();
++    } else if (transient) {
++      overStatus("Couldn't reach the leaderboard. This score is kept on this device and sent next time.");
++      loadOverBoard();
++    } else if (r.data && r.data.error === 'name_required') {
++      run.saved = false;
++      askName('That name is empty once the odd characters are gone. Try another.', lb.name);
++      overStatus();
++    } else {
++      overStatus("The logbook didn't accept this score.");
++      loadOverBoard();
++    }
++  }
++
++  async function loadOverBoard() {
++    const run = lb.run;
++    const params = { board: 'all', limit: 5 };
++    if (lb.name) params.me = lb.name;
++    const r = lbSeen(await api('GET', params));
++    if (lb.run !== run || !r.ok) return;
++    renderBoard(lbEl.overBoard, r.data);
++    showRecord(r.data);
++    if (!r.data.entries.length && !lbEl.overStatus.childNodes.length) overStatus('No scores on the board yet.');
++  }
++
++  lbEl.overForm.addEventListener('submit', (e) => {
++    e.preventDefault();
++    const name = cleanName(lbEl.overInput.value);
++    if (!name) { invalid(lbEl.overInput); return; }
++    const before = lb.name;
++    setName(name);
++    lbEl.overForm.hidden = true;
++    if (lb.run && !lb.run.saved) { saveShift(); return; }
++    if (lb.run && before && before.toLowerCase() !== name.toLowerCase()) overStatus('This shift stays under ', bold(before), '. From now on shifts save as ', bold(name), '.');
++    else overStatus('From now on shifts save as ', bold(name), '.');
++    loadOverBoard();
++  });
++
++  /* full leaderboard screen with a tab per inmate */
++  function openBoard(from) {
++    lb.ret = from;
++    lbEl.boardInput.value = lb.name;
++    lbEl.boardNote.textContent = lb.name ? '' : 'Pick a name and every shift you finish gets saved here.';
++    show('board');
++    loadBoard(lb.tab);
++  }
++
++  function closeBoard() {
++    if (screens.board.hidden) return;
++    show(lb.ret);
++  }
++
++  async function loadBoard(tab) {
++    lb.tab = tab;
++    lbEl.tabs.forEach((t) => {
++      const on = t.dataset.board === tab;
++      t.setAttribute('aria-selected', String(on));
++      t.tabIndex = on ? 0 : -1;
++    });
++    const id = ++lb.req;
++    lbEl.list.classList.add('loading');
++    if (!lbEl.list.childNodes.length) lbEl.status.textContent = 'Loading…';
++    const params = { board: tab, limit: 15 };
++    if (lb.name) params.me = lb.name;
++    const r = lbSeen(await api('GET', params));
++    if (id !== lb.req) return; // a newer tab was picked meanwhile
++    lbEl.list.classList.remove('loading');
++    if (!r.ok) {
++      lbEl.list.replaceChildren();
++      lbEl.foot.textContent = '';
++      lbEl.status.textContent = r.missing ? "The leaderboard isn't connected on this copy of the game." : "Couldn't reach the leaderboard. Try again in a moment.";
++      return;
++    }
++    const d = r.data;
++    renderBoard(lbEl.list, d);
++    lbEl.status.textContent = d.entries.length ? ''
++      : tab === 'all' ? 'No scores yet. Be the first name on the wall.' : `Nobody has finished a shift as ${CHARS[tab].name} yet.`;
++    lbEl.foot.textContent = d.players ? `${fmt(d.players)} ${d.players === 1 ? 'name' : 'names'} on this board. Each name's best shift counts.` : '';
++    if (tab === 'all') showRecord(d);
++  }
++
++  $('#boardTabs').addEventListener('click', (e) => {
++    const t = e.target.closest('.tab');
++    if (t && t.dataset.board !== lb.tab) loadBoard(t.dataset.board);
++  });
++  $('#boardTabs').addEventListener('keydown', (e) => {
++    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
++    e.preventDefault();
++    const ids = lbEl.tabs.map((t) => t.dataset.board);
++    const next = ids[(ids.indexOf(lb.tab) + (e.key === 'ArrowLeft' ? ids.length - 1 : 1)) % ids.length];
++    loadBoard(next);
++    lbEl.tabs[ids.indexOf(next)].focus();
++  });
++  lbEl.boardForm.addEventListener('submit', (e) => {
++    e.preventDefault();
++    const name = cleanName(lbEl.boardInput.value);
++    if (!name) { invalid(lbEl.boardInput); return; }
++    setName(name);
++    lbEl.boardInput.value = name;
++    lbEl.boardNote.replaceChildren('Saved. Your shifts go in as ', bold(name), '.');
++    loadBoard(lb.tab);
++  });
++  lbEl.boardBtn.addEventListener('click', () => openBoard('start'));
++  $('#fullBoardBtn').addEventListener('click', () => openBoard('over'));
++  $('#boardBack').addEventListener('click', closeBoard);
++
+   /* ---------- game flow ---------- */
+   let overTimer = 0;
+ 
+@@ -1629,6 +2040,7 @@ button{font:inherit}
+     $('#overCombo').textContent = fmt(S.bestCombo);
+     const stamp = $('#overStamp');
+     stamp.textContent = record ? 'New record' : S.strikes < MAX_STRIKES ? 'Clocked out' : S.lastStrike === 'towel' ? 'Towel snapped' : 'Three strikes';
++    lbShiftOver();
+ 
+     S.attractIn = 1.4;
+     clearTimeout(overTimer);
+@@ -1731,6 +2143,15 @@ button{font:inherit}
+   });
+   document.addEventListener('keydown', (e) => {
+     const focused = document.activeElement;
++    // Typing a name: letters, Space and Enter belong to the text field, not the game.
++    if (focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA')) {
++      if (e.key === 'Escape') focused.blur();
++      return;
++    }
++    if (!screens.board.hidden) {
++      if (e.key === 'Escape') { e.preventDefault(); closeBoard(); }
++      return;
++    }
+     if (focused && focused.classList && focused.classList.contains('suspect') &&
+         ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+       e.preventDefault();
+@@ -1779,6 +2200,7 @@ button{font:inherit}
+     sizeHero();
+     setMode('menu');
+     show('start', false);
++    lbBoot();
+     if (!running) {
+       running = true;
+       requestAnimationFrame((t) => { last = t; requestAnimationFrame(tick); });
+-- 
+2.43.0
+
